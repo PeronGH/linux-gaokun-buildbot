@@ -86,15 +86,17 @@ echo "user:user" | chpasswd
 # is a known default, so force a change on first login.
 passwd --expire user
 
-# Fedora's own kernels cannot boot this device, but dnf would keep updating
-# them and kernel-install would write each one into the 1 GiB ESP until it
-# fills. Remove them and keep dnf from pulling them back in.
-dnf -y remove kernel kernel-core kernel-modules kernel-modules-core || true
+# dnf must not remove the only kernel that can boot this device:
+# protect_running_kernel matches Fedora's package names, not ours.
 cat > /etc/dnf/protected.d/kernel-gaokun3.conf <<'EOF'
 kernel-gaokun3
 EOF
+
+# Fedora's own kernels cannot boot this device, and kernel-install would write
+# each one into the 1 GiB ESP. The rootfs does not currently pull any in, so
+# this only has to keep a later transaction from doing so.
 cat >> /etc/dnf/dnf.conf <<'EOF'
-exclude=kernel,kernel-core,kernel-modules,kernel-modules-core
+excludepkgs=kernel,kernel-core,kernel-modules,kernel-modules-core
 EOF
 cat > /etc/locale.conf <<'EOF'
 LANG=zh_CN.UTF-8
