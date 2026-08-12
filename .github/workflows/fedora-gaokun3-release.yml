@@ -206,7 +206,7 @@ jobs:
               dnf -y --installroot="'"$ROOTFS_DIR"'" --releasever="'"$FEDORA_RELEASE"'" --forcearch=aarch64 --use-host-config \
                 --exclude="'"$EXCLUDED_PACKAGES"'" \
                 install \
-                @core @standard "'"$DESKTOP_ENVIRONMENT"'" \
+                @core @standard '"$DESKTOP_ENVIRONMENT"' \
                 systemd-boot-unsigned alsa-ucm \
                 policycoreutils selinux-policy-targeted \
                 langpacks-en langpacks-zh_CN \
