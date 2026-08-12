@@ -26,15 +26,13 @@
 软件包流水线会构建并安装专用软件包集：
 
 - **Fedora (RPM)**：`kernel-gaokun3`、`kernel-modules-gaokun3`、`kernel-devel-gaokun3`、`linux-firmware-gaokun3`
-- **Ubuntu (DEB)**：`linux-image-gaokun3`、`linux-modules-gaokun3`、`linux-headers-gaokun3`、`linux-firmware-gaokun3`
 - **可选 EL2 变体**：用于第二套 EL2 内核构建的 `*-gaokun3-el2` 软件包集
-- Ubuntu 内核镜像包在安装/升级时运行 `update-initramfs`，进而通过发行版的 `systemd-boot` 钩子刷新 BLS 条目。
 - Fedora 内核 RPM 现自带匹配的 `dracut.conf.d` 片段，并在 `%posttrans` 中运行 `dracut` + `kernel-install add`，因此安装或升级软件包会自动刷新 initramfs 和 BLS 条目。
 
 ### Release 产物
 
-- Fedora 和 Ubuntu 镜像 release 包含压缩后的可安装镜像。
-- Gaokun RPM 和 DEB release 包含镜像工作流所使用的独立内核与固件软件包集合。
+- Fedora 镜像 release 包含压缩后的可安装镜像。
+- Gaokun RPM release 包含镜像工作流所使用的独立内核与固件软件包集合。
 
 ### 补丁来源
 
@@ -60,7 +58,6 @@
 - BLS 条目名称和条目目录由 `kernel-install` 生成。使用默认 `--entry-token=machine-id` 时，文件名与 `/etc/machine-id` 绑定，如 `loader/entries/<machine-id>-<kernel-release>.conf`。
 - 复制到 ESP 的内核、initrd/initramfs 和 DTB 文件也会由发行版钩子自动放入匹配的 `<entry-token>/<kernel-release>/` 目录。
 - 在 `/boot` 中还会保留一份 DTB 的兼容副本，方便用户后续切换到 GRUB。
-- Ubuntu DTB 安装在 `/usr/lib/linux-image-<kernel-release>/qcom/` 供 `kernel-install` 使用，另有 `/boot/dtb-<kernel-release>` 兼容副本。
 - Fedora DTB 安装在 `/usr/lib/modules/<kernel-release>/dtb/qcom/` 供 `kernel-install` 使用，另有 `/boot/dtb-<kernel-release>/qcom/` 兼容副本。
 - Gaokun3 镜像脚本提供 `/etc/kernel/cmdline` 和 `/etc/kernel/devicetree`，然后调用 `kernel-install add` 填充最终的 BLS 条目。
 
@@ -71,7 +68,6 @@
 - EL2 实现说明：[English](el2_kvm_guide_en.md) | [中文](el2_kvm_guide_zh.md)
 - Awesome Gaokun3：：[English](awesome_gaokun3_en.md) | [中文](awesome_gaokun3_zh.md)
 - 构建指南 – Fedora 44：[English](matebook_ego_build_guide_fedora44_en.md) | [中文](matebook_ego_build_guide_fedora44_zh.md)
-- 构建指南 – Ubuntu 26.04：[English](matebook_ego_build_guide_ubuntu26.04_en.md) | [中文](matebook_ego_build_guide_ubuntu26.04_zh.md)
 
 ## 功能支持
 

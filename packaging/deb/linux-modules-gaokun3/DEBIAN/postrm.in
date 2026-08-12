@@ -1,1 +1,0 @@
-depmod -a @KREL@ 2>/dev/null || true

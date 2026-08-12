@@ -8,7 +8,7 @@ This document uses `systemd-boot` as an example to take over the default boot en
 
 - Tools: DiskGenius (referred to as DG below)
 - Files:
-	- Extracted virtual disk image such as `ubuntu-26.04-gaokun3.img`
+	- Extracted virtual disk image such as `fedora-44-gaokun3.img`
 - UEFI Settings: Press F2 at startup, set Secure Boot to Disable in UEFI menu, save and reboot
 
 ## 2. Backup Virtual Disk rootfs and Restore to Internal Drive

@@ -1,6 +1,0 @@
-Package: @PKG_NAME@
-Version: @PKGVER@
-Architecture: @ARCH@
-Maintainer: cool <bilibili@att.net>
-Description: @PKG_DESC@
-@DEPENDS_LINE@

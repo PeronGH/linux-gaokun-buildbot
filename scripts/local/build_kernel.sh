@@ -16,8 +16,8 @@ else
     exit 1
 fi
 
-if [[ "$DISTRO" != "ubuntu" && "$DISTRO" != "fedora" ]]; then
-    echo "Unsupported distribution: $DISTRO. Only ubuntu and fedora are supported. Exiting."
+if [[ "$DISTRO" != "fedora" ]]; then
+    echo "Unsupported distribution: $DISTRO. Only fedora is supported. Exiting."
     exit 1
 fi
 
@@ -25,12 +25,7 @@ read -r -p "Install necessary minimal kernel build toolchain? [y/N] [default: n]
 install_deps="${install_deps:-n}"
 if [[ "$install_deps" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     echo "Installing build dependencies for $DISTRO..."
-    if [[ "$DISTRO" == "ubuntu" ]]; then
-        sudo apt-get update
-        sudo apt-get install -y gcc make bison flex bc libssl-dev libelf-dev dwarves git ccache curl
-    else
-        sudo dnf install -y gcc make bison flex bc openssl-devel elfutils-libelf-devel ncurses-devel dwarves git ccache curl
-    fi
+    sudo dnf install -y gcc make bison flex bc openssl-devel elfutils-libelf-devel ncurses-devel dwarves git ccache curl
 fi
 
 export CCACHE_DIR="${CCACHE_DIR:-$HOME/gaokun/.ccache}"
@@ -112,34 +107,12 @@ el2_state() {
     printf 'standard\n'
 }
 
-ensure_ubuntu_initramfs_firmware_hook() {
-    sudo mkdir -p /etc/initramfs-tools/hooks
-    sudo tee /etc/initramfs-tools/hooks/gaokun3-firmware >/dev/null <<'EOF'
-#!/bin/sh
-set -e
-
-. /usr/share/initramfs-tools/hook-functions
-
-copy_fw() {
-    copy_file firmware "$1" || [ "$?" -eq 1 ]
-}
-
-copy_fw /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcadsp8280.mbn
-copy_fw /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qccdsp8280.mbn
-copy_fw /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcslpi8280.mbn
-copy_fw /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/audioreach-tplg.bin
-EOF
-    sudo chmod 0755 /etc/initramfs-tools/hooks/gaokun3-firmware
-}
-
 build_kernel() {
     local mode="$1"
     local out_dir
     local dtb_name
     local cmdline
     local conf_root
-    local temp_kernel_conf_root=""
-    local restore_kernel_conf=0
     local current_state
 
     cd "$KERN_SRC"
@@ -213,15 +186,9 @@ build_kernel() {
     local dtb_inst_dir
     local dtb_boot_dir
 
-    if [[ "$DISTRO" == "ubuntu" ]]; then
-        initrd_src="initrd.img-$krel"
-        dtb_inst_dir="/usr/lib/linux-image-$krel/qcom"
-        dtb_boot_dir="/boot"
-    else
-        initrd_src="initramfs-$krel.img"
-        dtb_inst_dir="/usr/lib/modules/$krel/dtb/qcom"
-        dtb_boot_dir="/boot/dtb-$krel/qcom"
-    fi
+    initrd_src="initramfs-$krel.img"
+    dtb_inst_dir="/usr/lib/modules/$krel/dtb/qcom"
+    dtb_boot_dir="/boot/dtb-$krel/qcom"
 
     sudo make O="$out_dir" ARCH=arm64 CROSS_COMPILE="$CROSS_COMPILE" INSTALL_MOD_PATH=/ modules_install
     sudo rm -f /lib/modules/"$krel"/{build,source}
@@ -229,12 +196,8 @@ build_kernel() {
     sudo cp "$out_dir"/arch/arm64/boot/Image /boot/vmlinuz-"$krel"
     sudo mkdir -p "$dtb_inst_dir"
     sudo cp "$out_dir"/arch/arm64/boot/dts/qcom/"$dtb_name" "$dtb_inst_dir"/"$dtb_name"
-    if [[ "$DISTRO" == "ubuntu" ]]; then
-        sudo cp "$out_dir"/arch/arm64/boot/dts/qcom/"$dtb_name" "$dtb_boot_dir"/dtb-"$krel"
-    else
-        sudo mkdir -p "$dtb_boot_dir"
-        sudo cp "$out_dir"/arch/arm64/boot/dts/qcom/"$dtb_name" "$dtb_boot_dir"/"$dtb_name"
-    fi
+    sudo mkdir -p "$dtb_boot_dir"
+    sudo cp "$out_dir"/arch/arm64/boot/dts/qcom/"$dtb_name" "$dtb_boot_dir"/"$dtb_name"
 
     if ! sudo test -f "$dtb_inst_dir/$dtb_name"; then
         echo "ERROR: DTB was not installed where kernel-install expects it:" >&2
@@ -264,27 +227,7 @@ build_kernel() {
     printf '%s\n' "$cmdline" >"$conf_root/cmdline"
     printf 'qcom/%s\n' "$dtb_name" >"$conf_root/devicetree"
 
-    if [[ "$DISTRO" == "ubuntu" ]]; then
-        temp_kernel_conf_root="$(mktemp -d)"
-        restore_kernel_conf=1
-
-        for name in install.conf cmdline devicetree; do
-            if sudo test -f "/etc/kernel/$name"; then
-                sudo cp "/etc/kernel/$name" "$temp_kernel_conf_root/$name.orig"
-            fi
-        done
-
-        printf 'layout=bls\n' | sudo tee /etc/kernel/install.conf >/dev/null
-        printf '%s\n' "$cmdline" | sudo tee /etc/kernel/cmdline >/dev/null
-        printf 'qcom/%s\n' "$dtb_name" | sudo tee /etc/kernel/devicetree >/dev/null
-    fi
-
-    if [[ "$DISTRO" == "ubuntu" ]]; then
-        ensure_ubuntu_initramfs_firmware_hook
-        sudo update-initramfs -c -k "$krel"
-    else
-        sudo dracut --force --kver "$krel"
-    fi
+    sudo dracut --force --kver "$krel"
 
     echo "kernel-install inputs:"
     echo "  kernel release: $krel"
@@ -293,43 +236,10 @@ build_kernel() {
     echo "  devicetree:     qcom/$dtb_name"
     echo "  dtb source:     $dtb_inst_dir/$dtb_name"
 
-    {
-        sudo kernel-install --entry-token=machine-id remove "$krel" >/dev/null 2>&1 || true
-        if [[ "$DISTRO" == "fedora" ]]; then
-            sudo env KERNEL_INSTALL_CONF_ROOT="$conf_root" \
-                kernel-install --verbose --make-entry-directory=yes --entry-token=machine-id add \
-                "$krel" "/boot/vmlinuz-$krel"
-        else
-            sudo env KERNEL_INSTALL_CONF_ROOT="$conf_root" \
-                kernel-install --verbose --make-entry-directory=yes --entry-token=machine-id add \
-                "$krel" "/boot/vmlinuz-$krel" "/boot/$initrd_src"
-        fi
-    } || {
-        if [[ "$restore_kernel_conf" -eq 1 ]]; then
-            for name in install.conf cmdline devicetree; do
-                if [[ -f "$temp_kernel_conf_root/$name.orig" ]]; then
-                    sudo cp "$temp_kernel_conf_root/$name.orig" "/etc/kernel/$name"
-                else
-                    sudo rm -f "/etc/kernel/$name"
-                fi
-            done
-            rm -rf "$temp_kernel_conf_root"
-        fi
-        rm -rf "$conf_root"
-        trap - RETURN
-        return 1
-    }
-
-    if [[ "$restore_kernel_conf" -eq 1 ]]; then
-        for name in install.conf cmdline devicetree; do
-            if [[ -f "$temp_kernel_conf_root/$name.orig" ]]; then
-                sudo cp "$temp_kernel_conf_root/$name.orig" "/etc/kernel/$name"
-            else
-                sudo rm -f "/etc/kernel/$name"
-            fi
-        done
-        rm -rf "$temp_kernel_conf_root"
-    fi
+    sudo kernel-install --entry-token=machine-id remove "$krel" >/dev/null 2>&1 || true
+    sudo env KERNEL_INSTALL_CONF_ROOT="$conf_root" \
+        kernel-install --verbose --make-entry-directory=yes --entry-token=machine-id add \
+        "$krel" "/boot/vmlinuz-$krel"
 
     rm -rf "$conf_root"
     trap - RETURN

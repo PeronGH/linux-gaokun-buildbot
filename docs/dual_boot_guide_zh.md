@@ -8,7 +8,7 @@
 
 - 工具：DiskGenius（下文简称 DG）
 - 文件：
-	- 解压后的虚拟磁盘镜像如 `ubuntu-26.04-gaokun3.img`
+	- 解压后的虚拟磁盘镜像如 `fedora-44-gaokun3.img`
 - UEFI 设置：开机 F2 启动，UEFI 菜单 Secure Boot 选择 Disable 保存并重启
 
 ## 二、备份虚拟磁盘 rootfs 并还原到内置硬盘
