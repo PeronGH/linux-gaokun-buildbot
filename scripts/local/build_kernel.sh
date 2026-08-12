@@ -95,7 +95,6 @@ ensure_source_tree() {
     echo "Applying standard gaokun3 patches..."
     git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/upstream/*.patch
     git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/others/*.patch
-    git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/media/*.patch
     git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/0099-arm64-gaokun3-import-local-dts-and-defconfig.patch
 }
 

@@ -64,7 +64,6 @@ mkdir -p "$WORKDIR"
 configure_git_identity "$KERN_SRC"
 git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/upstream/*.patch
 git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/others/*.patch
-git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/media/*.patch
 git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/0099-arm64-gaokun3-import-local-dts-and-defconfig.patch
 
 ccache -z || true

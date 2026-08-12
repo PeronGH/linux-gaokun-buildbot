@@ -43,7 +43,6 @@
 - `others/0002`：本仓库内的本地改动，用于启用 DSC 以及 60 Hz / 120 Hz 切换
 - `others/0003`：来自 [chiyuki0325/EGoTouchRev-Linux](https://github.com/chiyuki0325/EGoTouchRev-Linux)，用于加入 Himax HX83121A SPI 触摸屏驱动
 - `others/0004`：来自 [TheUnknownThing/linux-gaokun](https://github.com/TheUnknownThing/linux-gaokun)，用于改进 Type-C 路径的 UCSI 处理和模块接线
-- `media/*`：来自 [jhovold/linux](https://github.com/jhovold/linux/commits/wip/sc8280xp-6.16), 为高通 SC8280XP 平台 添加 Venus 视频编解码驱动支持
 - `0099`：本仓库内的本地补丁，用于导入当前的 DTS 文件和 `gaokun3_defconfig`
 - **[可选]** `el2/*`：来自 [TravMurav/linux](https://github.com/TravMurav/linux/tree/x13s-6.18-v1.1-cxsd)，用于补齐 EL2 启动路径中的 SMP2P 接管、remoteproc attach/restart 流程、SCM/SHM owner 处理，以及 rpmsg / QRTR / pmic_glink 相关稳定性修复
 

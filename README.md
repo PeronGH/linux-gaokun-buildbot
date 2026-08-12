@@ -43,7 +43,6 @@ The package pipeline builds and installs dedicated package sets:
 - `others/0002`: local change in this repository to enable DSC and allow 60 Hz / 120 Hz switching
 - `others/0003`: adapted from [chiyuki0325/EGoTouchRev-Linux](https://github.com/chiyuki0325/EGoTouchRev-Linux) to add the Himax HX83121A SPI touchscreen driver
 - `others/0004`: adapted from [TheUnknownThing/linux-gaokun](https://github.com/TheUnknownThing/linux-gaokun) to improve UCSI handling and module wiring for the Type-C path
-- `media/*`: adapted from the [jhovold/linux](https://github.com/jhovold/linux/commits/wip/sc8280xp-6.16) to add SC8280XP Venus support
 - `0099`: local patch in this repository to import the current DTS files and `gaokun3_defconfig`
 - **[Optional]** `el2/*`: adapted from [TravMurav/linux](https://github.com/TravMurav/linux/tree/x13s-6.18-v1.1-cxsd) for the EL2 boot path, including SMP2P handover, remoteproc attach/restart flow, SCM/SHM owner handling, and related rpmsg/QRTR/pmic_glink stability fixes
 
