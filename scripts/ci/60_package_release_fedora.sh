@@ -115,4 +115,4 @@ TAG_NAME="fedora${FEDORA_RELEASE}-${KREL}$(if [[ "$BUILD_EL2" == "true" ]]; then
 echo "$TAG_NAME" > "$WORKDIR/tag-name.txt"
 echo "$KREL" > "$WORKDIR/kernel-release-export.txt"
 echo "$PACKAGE_GLOB" > "$WORKDIR/package-glob.txt"
-echo "$(basename "$RELEASE_BODY_FILE")" > "$WORKDIR/release-body-file.txt"
+basename "$RELEASE_BODY_FILE" > "$WORKDIR/release-body-file.txt"

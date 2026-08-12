@@ -168,9 +168,12 @@ EOF
   modules_rpm_path="$(find "$RPM_TOPDIR/RPMS" -name "${modules_pkg}-*.rpm" -print -quit)"
   devel_rpm_path="$(find "$RPM_TOPDIR/RPMS" -name "${devel_pkg}-*.rpm" -print -quit)"
 
-  local kernel_rpm_name="$(basename "$kernel_rpm_path")"
-  local modules_rpm_name="$(basename "$modules_rpm_path")"
-  local devel_rpm_name="$(basename "$devel_rpm_path")"
+  local kernel_rpm_name
+  local modules_rpm_name
+  local devel_rpm_name
+  kernel_rpm_name="$(basename "$kernel_rpm_path")"
+  modules_rpm_name="$(basename "$modules_rpm_path")"
+  devel_rpm_name="$(basename "$devel_rpm_path")"
 
   cp "$kernel_rpm_path" "$ARTIFACT_DIR/$kernel_rpm_name"
   cp "$modules_rpm_path" "$ARTIFACT_DIR/$modules_rpm_name"

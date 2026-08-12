@@ -1,0 +1,4 @@
+# Follow files pulled in with `.`, and resolve their relative paths against the
+# directory of the sourcing script rather than the caller's working directory.
+external-sources=true
+source-path=SCRIPTDIR

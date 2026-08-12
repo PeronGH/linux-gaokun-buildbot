@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=lib/common_image.sh
 . "$(dirname "$0")/lib/common_image.sh"
 
 : "${GAOKUN_DIR:?missing GAOKUN_DIR}"
