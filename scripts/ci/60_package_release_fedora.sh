@@ -49,7 +49,7 @@ if [ "$(stat -c '%s' "$ZST_FILE")" -lt "$SPLIT_THRESHOLD_BYTES" ]; then
 - Kernel Release: \`${KREL}\`
 - Architecture: \`arm64\`
 ${EL2_RELEASE_BLOCK}
-- Root Filesystem: \`Btrfs (@, @home, @var)\`
+- Root Filesystem: \`Btrfs (root, home)\`
 - Bootloader: \`systemd-boot\`
 - Image File: \`${IMAGE_BASENAME}\`
 - Compressed File: \`${IMAGE_BASENAME}.zst\`
@@ -80,7 +80,7 @@ else
 - Kernel Release: \`${KREL}\`
 - Architecture: \`arm64\`
 ${EL2_RELEASE_BLOCK}
-- Root Filesystem: \`Btrfs (@, @home, @var)\`
+- Root Filesystem: \`Btrfs (root, home)\`
 - Bootloader: \`systemd-boot\`
 - Image File: \`${IMAGE_BASENAME}\`
 - Compressed File: \`${IMAGE_BASENAME}.zst\`

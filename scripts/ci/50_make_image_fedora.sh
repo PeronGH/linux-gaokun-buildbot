@@ -37,7 +37,6 @@ cleanup() {
   set +e
   sudo umount "$MNT/dev/pts" 2>/dev/null || true
   sudo umount "$MNT/boot/efi" 2>/dev/null || true
-  sudo umount "$MNT/var" 2>/dev/null || true
   sudo umount "$MNT/home" 2>/dev/null || true
   sudo umount "$MNT/dev" 2>/dev/null || true
   sudo umount "$MNT/proc" 2>/dev/null || true
@@ -50,15 +49,12 @@ trap cleanup EXIT
 
 sudo mkdir -p "$MNT"
 sudo mount "${LOOP}p2" "$MNT"
-sudo btrfs subvolume create "$MNT/@"
-sudo btrfs subvolume create "$MNT/@home"
-sudo btrfs subvolume create "$MNT/@var"
+sudo btrfs subvolume create "$MNT/root"
+sudo btrfs subvolume create "$MNT/home"
 sudo umount "$MNT"
-sudo mount -o subvol=@ "${LOOP}p2" "$MNT"
+sudo mount -o subvol=root "${LOOP}p2" "$MNT"
 sudo mkdir -p "$MNT/home"
-sudo mount -o subvol=@home "${LOOP}p2" "$MNT/home"
-sudo mkdir -p "$MNT/var"
-sudo mount -o subvol=@var "${LOOP}p2" "$MNT/var"
+sudo mount -o subvol=home "${LOOP}p2" "$MNT/home"
 sudo mkdir -p "$MNT/boot/efi"
 sudo mount "${LOOP}p1" "$MNT/boot/efi"
 
@@ -66,9 +62,8 @@ sudo rsync -aHAX "$ROOTFS_DIR/" "$MNT/"
 install_common_image_assets "$MNT" "$GAOKUN_DIR"
 
 sudo tee "$MNT/etc/fstab" >/dev/null <<EOF
-UUID=${ROOT_UUID}  /         btrfs  subvol=@,compress=zstd:1,ssd,noatime  0  0
-UUID=${ROOT_UUID}  /home     btrfs  subvol=@home,compress=zstd:1,ssd,noatime  0  0
-UUID=${ROOT_UUID}  /var      btrfs  subvol=@var,compress=zstd:1,ssd,noatime  0  0
+UUID=${ROOT_UUID}  /         btrfs  subvol=root,compress=zstd:1  0  0
+UUID=${ROOT_UUID}  /home     btrfs  subvol=home,compress=zstd:1  0  0
 UUID=${EFI_UUID}   /boot/efi vfat   defaults,nofail,x-systemd.device-timeout=10s  0  2
 EOF
 
@@ -137,7 +132,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=$ROOT_UUID rootflags=subvol=@ clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
 EOF
 
 cat > /etc/kernel/devicetree <<'EOF'

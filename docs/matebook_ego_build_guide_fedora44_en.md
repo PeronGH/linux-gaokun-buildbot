@@ -297,28 +297,24 @@ ROOT_UUID=$(sudo blkid -s UUID -o value ${LOOP}p2)
 ```bash
 sudo mkdir -p /mnt/ego-fedora
 
-# Create common Fedora subvolume layout: @ for root partition, @home for home directory, @var for /var
+# Create Fedora's subvolume layout: root for /, home for /home
 sudo mount ${LOOP}p2 /mnt/ego-fedora
-sudo btrfs subvolume create /mnt/ego-fedora/@
-sudo btrfs subvolume create /mnt/ego-fedora/@home
-sudo btrfs subvolume create /mnt/ego-fedora/@var
+sudo btrfs subvolume create /mnt/ego-fedora/root
+sudo btrfs subvolume create /mnt/ego-fedora/home
 sudo umount /mnt/ego-fedora
 
 # Mount subvolumes and prepare EFI partition
-sudo mount -o subvol=@ ${LOOP}p2 /mnt/ego-fedora
+sudo mount -o subvol=root ${LOOP}p2 /mnt/ego-fedora
 sudo mkdir -p /mnt/ego-fedora/home
-sudo mount -o subvol=@home ${LOOP}p2 /mnt/ego-fedora/home
-sudo mkdir -p /mnt/ego-fedora/var
-sudo mount -o subvol=@var ${LOOP}p2 /mnt/ego-fedora/var
+sudo mount -o subvol=home ${LOOP}p2 /mnt/ego-fedora/home
 sudo mkdir -p /mnt/ego-fedora/boot/efi
 sudo mount ${LOOP}p1 /mnt/ego-fedora/boot/efi
 
 sudo rsync -aHAX --info=progress2 --exclude='/proc/*' --exclude='/sys/*' --exclude='/dev/*' --exclude='/run/*' $ROOTFS_DIR/ /mnt/ego-fedora/
 
 sudo tee /mnt/ego-fedora/etc/fstab > /dev/null <<EOF
-UUID=${ROOT_UUID}  /         btrfs  subvol=@,compress=zstd:1,ssd,noatime  0  0
-UUID=${ROOT_UUID}  /home     btrfs  subvol=@home,compress=zstd:1,ssd,noatime  0  0
-UUID=${ROOT_UUID}  /var      btrfs  subvol=@var,compress=zstd:1,ssd,noatime  0  0
+UUID=${ROOT_UUID}  /         btrfs  subvol=root,compress=zstd:1  0  0
+UUID=${ROOT_UUID}  /home     btrfs  subvol=home,compress=zstd:1  0  0
 UUID=${EFI_UUID}   /boot/efi vfat   defaults,nofail,x-systemd.device-timeout=10s  0  2
 EOF
 ```
@@ -365,7 +361,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=@ clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
 EOF
 
 cat > /etc/kernel/devicetree <<EOF
@@ -398,7 +394,7 @@ if [ -n "$KREL_EL2" ]; then
 layout=bls
 EOF
     cat > $EL2_CONF_ROOT/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=@ clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
 EOF
     cat > $EL2_CONF_ROOT/devicetree <<EOF
 qcom/sc8280xp-huawei-gaokun3-el2.dtb
