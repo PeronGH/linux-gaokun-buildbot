@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=../lib/import_local_sources.sh
+. "$(dirname "$0")/../lib/import_local_sources.sh"
+
 : "${GAOKUN_DIR:?missing GAOKUN_DIR}"
 : "${WORKDIR:?missing WORKDIR}"
 : "${KERN_SRC:?missing KERN_SRC}"
@@ -64,7 +67,7 @@ mkdir -p "$WORKDIR"
 configure_git_identity "$KERN_SRC"
 git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/upstream/*.patch
 git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/others/*.patch
-git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/0099-arm64-gaokun3-import-local-dts-and-defconfig.patch
+import_local_sources "$GAOKUN_DIR" "$KERN_SRC"
 
 ccache -z || true
 build_variant "$KERN_SRC" "$KERN_OUT"

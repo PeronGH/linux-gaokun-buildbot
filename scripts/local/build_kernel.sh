@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=../lib/import_local_sources.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../lib/import_local_sources.sh"
+
 KERNEL_TAG="${KERNEL_TAG:-v7.2-rc2}"
 GAOKUN_DIR="${GAOKUN_DIR:-$HOME/gaokun/linux-gaokun-buildbot}"
 KERN_SRC="${KERN_SRC:-$HOME/gaokun/mainline-linux}"
@@ -90,7 +93,7 @@ ensure_source_tree() {
     echo "Applying standard gaokun3 patches..."
     git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/upstream/*.patch
     git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/others/*.patch
-    git -C "$KERN_SRC" am "$GAOKUN_DIR"/patches/0099-arm64-gaokun3-import-local-dts-and-defconfig.patch
+    import_local_sources "$GAOKUN_DIR" "$KERN_SRC"
 }
 
 el2_state() {

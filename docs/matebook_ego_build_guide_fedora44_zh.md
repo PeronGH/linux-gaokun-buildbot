@@ -86,7 +86,9 @@ git config user.name "local builder"
 git config user.email "builder@example.com"
 git am $GAOKUN_DIR/patches/upstream/*.patch
 git am $GAOKUN_DIR/patches/others/*.patch
-git am $GAOKUN_DIR/patches/0099-arm64-gaokun3-import-local-dts-and-defconfig.patch
+cp $GAOKUN_DIR/dts/*.dts $GAOKUN_DIR/dts/*.dtsi arch/arm64/boot/dts/qcom/
+cp $GAOKUN_DIR/defconfig/gaokun3_defconfig arch/arm64/configs/
+git add -A && git commit -m "arm64: gaokun3: import local dts and defconfig"
 
 mkdir -p $KERN_OUT
 ccache -z
