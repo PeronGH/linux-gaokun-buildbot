@@ -194,6 +194,14 @@ timeout 5
 console-mode keep
 editor no
 EOF
+
+# The rootfs is assembled on a host without SELinux, so rpm could not apply
+# file contexts. Label it here: an enforcing boot against an unlabeled root
+# fails outright. CONFIG_SECURITY_SELINUX_BOOTPARAM=y leaves selinux=0 on the
+# kernel cmdline as the escape hatch if this ever goes wrong.
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+setfiles -e /dev -e /proc -e /sys -e /run \
+  -F /etc/selinux/targeted/contexts/files/file_contexts /
 CHROOT_EOF
 
 if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then

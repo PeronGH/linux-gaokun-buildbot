@@ -463,7 +463,8 @@ CONFIG_SECURITY_SELINUX=y
 CONFIG_SECURITY_APPARMOR=y
 CONFIG_SECURITY_LANDLOCK=y
 # CONFIG_INTEGRITY is not set
-CONFIG_LSM="landlock,lockdown,yama,loadpin,safesetid,apparmor,integrity,bpf"
+CONFIG_SECURITY_SELINUX_BOOTPARAM=y
+CONFIG_LSM="landlock,lockdown,yama,loadpin,safesetid,selinux,integrity,bpf"
 CONFIG_CRYPTO_NULL=y
 CONFIG_CRYPTO_AES=y
 CONFIG_CRYPTO_DES=m
