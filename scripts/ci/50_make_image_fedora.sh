@@ -83,7 +83,9 @@ echo "fedora" > /etc/hostname
 id -u user >/dev/null 2>&1 || useradd -m -s /bin/bash -G wheel user
 echo "user:user" | chpasswd
 # Stock Fedora has you set your own password in initial-setup; the shipped one
-# is a known default, so force a change on first login.
+# is a known default, so prompt for a change on first login. GDM presents the
+# change-password procedure, but historically it can be declined and the login
+# still succeeds, so treat this as a nudge rather than a guarantee.
 passwd --expire user
 
 # dnf must not remove the only kernel that can boot this device:
