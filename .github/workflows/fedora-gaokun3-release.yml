@@ -306,13 +306,6 @@ jobs:
           echo "package_glob=$PACKAGE_GLOB" >> "$GITHUB_OUTPUT"
           echo "release_body_file=$RELEASE_BODY_FILE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload build artifacts (workflow)
-        uses: actions/upload-artifact@v6
-        with:
-          name: fedora-gaokun3-build
-          path: |
-            ${{ steps.package.outputs.artifact_dir }}/${{ steps.package.outputs.package_glob }}
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.6.1
         with:

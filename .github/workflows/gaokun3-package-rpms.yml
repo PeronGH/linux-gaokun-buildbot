@@ -124,15 +124,6 @@ jobs:
               scripts/ci/70_build_package_rpms.sh
             '
 
-      - name: Upload build artifacts (workflow)
-        uses: actions/upload-artifact@v6
-        with:
-          name: gaokun3-package-rpms
-          path: |
-            ${{ env.ARTIFACT_DIR }}/*.rpm
-            ${{ env.ARTIFACT_DIR }}/package-manifest.json
-            ${{ env.ARTIFACT_DIR }}/package-release-body.md
-
       - name: Publish package release
         uses: softprops/action-gh-release@v2.6.1
         with:
