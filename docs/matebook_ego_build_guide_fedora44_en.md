@@ -356,7 +356,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
 EOF
 
 cat > /etc/kernel/devicetree <<EOF
@@ -373,11 +373,10 @@ fi
 
 rm -f /etc/machine-id
 systemd-machine-id-setup
-MACHINE_ID=$(cat /etc/machine-id)
 
 bootctl --no-variables --esp-path=/boot/efi install
 
-kernel-install --make-entry-directory=yes --entry-token=machine-id add \
+kernel-install --make-entry-directory=yes --entry-token=os-id add \
     $KREL /boot/vmlinuz-$KREL
 
 if [ -n "$KREL_EL2" ]; then
@@ -389,13 +388,13 @@ if [ -n "$KREL_EL2" ]; then
 layout=bls
 EOF
     cat > $EL2_CONF_ROOT/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
 EOF
     cat > $EL2_CONF_ROOT/devicetree <<EOF
 qcom/sc8280xp-huawei-gaokun3-el2.dtb
 EOF
     KERNEL_INSTALL_CONF_ROOT=$EL2_CONF_ROOT \
-        kernel-install --make-entry-directory=yes --entry-token=machine-id add \
+        kernel-install --make-entry-directory=yes --entry-token=os-id add \
         $KREL_EL2 /boot/vmlinuz-$KREL_EL2
     rm -rf $EL2_CONF_ROOT
 
@@ -411,11 +410,14 @@ EOF
 fi
 
 cat > /boot/efi/loader/loader.conf <<EOF
-default ${MACHINE_ID}-${KREL}.conf
+default fedora-${KREL}.conf
 timeout 5
 console-mode keep
 editor no
 EOF
+
+# Empty it again, so every device generates its own on first boot
+: > /etc/machine-id
 
 exit
 ```
@@ -423,7 +425,7 @@ exit
 Notes:
 
 - Instead of manually maintaining `loader/entries/*.conf` and `gaokun3/fedora/...` directories, we let `kernel-install` generate the standard BLS Type #1 layout.
-- Default uses `--entry-token=machine-id`, so entry names become `/boot/efi/loader/entries/<machine-id>-<kernel-release>.conf`.
+- We pass `--entry-token=os-id`, so entry names become `/boot/efi/loader/entries/fedora-<kernel-release>.conf`. The machine-id token cannot be used here: the image ships an empty `/etc/machine-id` so each device generates its own on first boot, which would leave entries named after a build-time id orphaned.
 - Fedora 44's `90-loaderentry.install` looks for device tree from `/usr/lib/modules/<kernel-release>/dtb/`, so DTB must be placed in this standard path.
 - Fedora's default `51-dracut-rescue.install` generates an additional `0-rescue` boot entry, but this rescue entry doesn't include `devicetree` by default and is unusable on gaokun3, so it's explicitly disabled here.
 

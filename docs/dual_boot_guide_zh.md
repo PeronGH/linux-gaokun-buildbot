@@ -43,7 +43,7 @@ Windows 一般可由 `systemd-boot` 自动探测，所以无需额外修改 Wind
 说明：
 
 - 现在镜像使用标准 `kernel-install` + BLS 布局，不再固定使用 `gaokun3/<distro>/<kernel-release>/...` 目录。
-- 默认情况下，Gaokun3 镜像会使用 `--entry-token=machine-id`，因此 ESP 中通常会出现 `/loader/entries/<machine-id>-<kernel-release>.conf`，以及 `/<machine-id>/<kernel-release>/linux|initrd|*.dtb` 这类目录结构。
+- Gaokun3 镜像使用 `--entry-token=os-id`，因此 ESP 中通常会出现 `/loader/entries/fedora-<kernel-release>.conf`，以及 `/fedora/<kernel-release>/linux|initrd|*.dtb` 这类目录结构。
 - 若发行版或用户改过 `kernel-install --entry-token`，顶层目录名可能不是 `machine-id`，但仍会遵循同样的 BLS 规则。
 
 ## 四、修改 EFI 分区卷序列号

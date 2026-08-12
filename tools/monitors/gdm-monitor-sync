@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SRC_MONITORS="/home/user/.config/monitors.xml"
+SRC_MONITORS="/usr/local/share/gaokun/monitors.xml"
 SENTINEL="/var/lib/.gaokun-monitors-synced"
 
 pick_gdm_dir() {

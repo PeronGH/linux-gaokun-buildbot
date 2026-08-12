@@ -1,8 +1,8 @@
 [Unit]
-Description=Sync user monitors.xml to GDM on first boot
+Description=Sync the gaokun3 panel layout to GDM on first boot
 After=gdm.service
 Wants=gdm.service
-ConditionPathExists=/home/user/.config/monitors.xml
+ConditionPathExists=/usr/local/share/gaokun/monitors.xml
 ConditionPathExists=!/var/lib/.gaokun-monitors-synced
 
 [Service]

@@ -63,7 +63,7 @@
 
 镜像和本地安装工作流现遵循标准 `kernel-install` + BLS 流程，而非手动编写 `systemd-boot` 条目。
 
-- BLS 条目名称和条目目录由 `kernel-install` 生成。使用默认 `--entry-token=machine-id` 时，文件名与 `/etc/machine-id` 绑定，如 `loader/entries/<machine-id>-<kernel-release>.conf`。
+- BLS 条目名称和条目目录由 `kernel-install` 配合 `--entry-token=os-id` 生成，即 `loader/entries/fedora-<kernel-release>.conf`。这里特意不用默认的 machine-id：镜像中的 `/etc/machine-id` 为空，每台设备首次启动时各自生成，按构建时 id 命名的条目会被孤立。
 - 复制到 ESP 的内核、initrd/initramfs 和 DTB 文件也会由发行版钩子自动放入匹配的 `<entry-token>/<kernel-release>/` 目录。
 - 在 `/boot` 中还会保留一份 DTB 的兼容副本，方便用户后续切换到 GRUB。
 - Fedora DTB 安装在 `/usr/lib/modules/<kernel-release>/dtb/qcom/` 供 `kernel-install` 使用，另有 `/boot/dtb-<kernel-release>/qcom/` 兼容副本。

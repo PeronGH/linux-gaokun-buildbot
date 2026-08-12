@@ -76,13 +76,10 @@ sudo mount -t tmpfs tmpfs "$MNT/run"
 
 sudo chroot "$MNT" /usr/bin/env KREL="$KREL" KREL_EL2="$KREL_EL2" BUILD_EL2="$BUILD_EL2" ROOT_UUID="$ROOT_UUID" /bin/bash -euxo pipefail <<'CHROOT_EOF'
 echo "fedora" > /etc/hostname
-id -u user >/dev/null 2>&1 || useradd -m -s /bin/bash -G wheel user
-echo "user:user" | chpasswd
-# Stock Fedora has you set your own password in initial-setup; the shipped one
-# is a known default, so prompt for a change on first login. GDM presents the
-# change-password procedure, but historically it can be declined and the login
-# still succeeds, so treat this as a nudge rather than a guarantee.
-passwd --expire user
+
+# No account is created here. gdm runs gnome-initial-setup when no regular user
+# exists, so the first boot asks for a name and password the way stock Fedora
+# does, instead of shipping a known one.
 
 # dnf must not remove the only kernel that can boot this device:
 # protect_running_kernel matches Fedora's package names, not ours.
@@ -110,12 +107,16 @@ cat > /var/lib/AccountsService/users/gdm <<'EOF'
 SystemAccount=true
 EOF
 
-install -d -m 0755 /home/user/.config
-install -Dm644 /usr/local/share/gaokun/monitors.xml /home/user/.config/monitors.xml
-chown -R user:user /home/user
+# Seed the panel layout through skel, since the account that needs it does not
+# exist until first boot.
+install -Dm644 /usr/local/share/gaokun/monitors.xml /etc/skel/.config/monitors.xml
 
-systemctl enable gdm NetworkManager sshd \
+systemctl enable gdm NetworkManager \
   gdm-monitor-sync.service patch-nvm-bdaddr.service || true
+
+# The Workstation working group has openssh-server disabled by default, while
+# Fedora's general preset enables it, so say so explicitly.
+systemctl disable sshd.service || true
 
 cat > /etc/dracut.conf.d/matebook.conf <<'MODEOF'
 hostonly="no"
@@ -131,7 +132,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 loglevel=4 psi=1
+root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
 EOF
 
 cat > /etc/kernel/devicetree <<'EOF'
@@ -143,9 +144,11 @@ if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
   dracut --force --kver "$KREL_EL2"
 fi
 
+# Generated only so the tools below have one to work with. It is emptied again
+# at the end of this script, since a machine-id baked into an image would be
+# shared by every device flashed from it.
 rm -f /etc/machine-id
 systemd-machine-id-setup
-MACHINE_ID="$(cat /etc/machine-id)"
 
 bootctl --no-variables --esp-path=/boot/efi install
 
@@ -163,9 +166,9 @@ EOF
   printf '%s\n' "$cmdline" > "$conf_root/cmdline"
   printf 'qcom/%s\n' "$dtb" > "$conf_root/devicetree"
 
-  kernel-install --entry-token=machine-id remove "$krel" || true
+  kernel-install --entry-token=os-id remove "$krel" || true
   KERNEL_INSTALL_CONF_ROOT="$conf_root" \
-    kernel-install --verbose --make-entry-directory=yes --entry-token=machine-id add \
+    kernel-install --verbose --make-entry-directory=yes --entry-token=os-id add \
     "$krel" "$image"
   rm -rf "$conf_root"
 }
@@ -187,7 +190,7 @@ if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
 fi
 
 cat > /boot/efi/loader/loader.conf <<EOF
-default ${MACHINE_ID}-${KREL}.conf
+default fedora-${KREL}.conf
 timeout 5
 console-mode keep
 editor no
@@ -200,6 +203,11 @@ EOF
 sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 setfiles -e /dev -e /proc -e /sys -e /run \
   -F /etc/selinux/targeted/contexts/files/file_contexts /
+
+# Last step, after everything that needed a machine-id has run. An empty file
+# makes systemd generate a per-device id on first boot and makes
+# ConditionFirstBoot fire; a populated one would be cloned to every device.
+: > /etc/machine-id
 CHROOT_EOF
 
 if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then

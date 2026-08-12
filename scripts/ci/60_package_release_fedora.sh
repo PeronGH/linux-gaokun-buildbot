@@ -61,10 +61,10 @@ ${EL2_RELEASE_BLOCK}
 - Excluded Packages: \`${EXCLUDED_PACKAGES}\`
 - Extra Packages: \`${EXTRA_PACKAGES}\`
 
-## Default Login
+## First Boot
 
-- Username: \`user\`
-- Password: \`user\`
+- No account is shipped. GNOME initial setup asks for your name, password and
+  language on first boot, as on a stock Fedora install.
 ${EL2_PAYLOAD_BLOCK}
 EOF
 else
@@ -92,10 +92,10 @@ ${EL2_RELEASE_BLOCK}
 - Excluded Packages: \`${EXCLUDED_PACKAGES}\`
 - Extra Packages: \`${EXTRA_PACKAGES}\`
 
-## Default Login
+## First Boot
 
-- Username: \`user\`
-- Password: \`user\`
+- No account is shipped. GNOME initial setup asks for your name, password and
+  language on first boot, as on a stock Fedora install.
 
 ${EL2_PAYLOAD_BLOCK}
 
