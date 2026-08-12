@@ -6,6 +6,14 @@
 
 镜像流水线现默认使用 `systemd-boot`，并可选构建带 `CONFIG_LOCALVERSION="-gaokun3-el2"` 的第二套 EL2 内核变体。
 
+## 目标
+
+以下目标按优先级排列，冲突时以靠前者为准。
+
+1. **在 MateBook E Go 上获得最佳体验。** 硬件适配优先于其他一切。DTS、内核配置、固件集，以及 `fbcon=rotate:1`、`usbhid.quirks` 等 cmdline 参数都是这台设备所必需的，即使与原版 Fedora 不同也会保留。启用 RPM Fusion 和 `libavcodec-freeworld` 同样出于这个原因：开箱即用地播放媒体。
+2. **接近原版 Fedora 的体验。** 在硬件没有强制要求的地方，遵循上游 Fedora 而非自创方案：Fedora 的 Btrfs 布局（`root` 与 `home` 子卷、`compress=zstd:1`）、SELinux enforcing、不使用免密 `sudo`。任何偏离都应是有意为之，并且值得记录下来。
+3. **可以长期日常使用。** 不应比 x86 Fedora 安装更容易被搞坏：`kernel-gaokun3` 受删除保护、排除无法引导本设备的 Fedora 官方内核、安装内核即成为默认启动项。此项特意排在最后，因此不会添加 Fedora 本身没有的额外限制，`dnf system-upgrade` 即使在这里确实有风险也不做拦截。
+
 ## 包含内容
 
 ### 仓库结构

@@ -6,6 +6,14 @@ Build scripts, patches, kernel config, DTS files, tools, and firmware for Linux 
 
 The image pipeline now uses `systemd-boot` by default and can optionally build a second EL2 kernel variant with `CONFIG_LOCALVERSION="-gaokun3-el2"`.
 
+## Goals
+
+These are ordered. When they conflict, the earlier one wins.
+
+1. **The best experience on the MateBook E Go.** Hardware enablement comes before everything else. The DTS, the kernel config, the firmware bundle, and cmdline entries such as `fbcon=rotate:1` and `usbhid.quirks` exist because this device needs them, and they stay even where they are unlike stock Fedora. RPM Fusion and `libavcodec-freeworld` ship enabled for the same reason: media playback should work out of the box.
+2. **A stock Fedora experience.** Where the hardware does not force our hand, follow upstream Fedora instead of inventing: Fedora's Btrfs layout (`root` and `home` subvolumes, `compress=zstd:1`), SELinux enforcing, no passwordless `sudo`. Deviations should be deliberate, and worth writing down.
+3. **Safe to daily drive.** It should not be easier to break than an x86 Fedora install: `kernel-gaokun3` is protected from removal, Fedora's own kernels are excluded because they cannot boot this device, and installing a kernel makes it the one that boots. This ranks last on purpose, so guard rails Fedora itself does not have are not added. `dnf system-upgrade` is left alone even though it is a real risk here.
+
 ## What is included
 
 ### Repository layout
