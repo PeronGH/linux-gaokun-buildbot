@@ -82,9 +82,20 @@ sudo chroot "$MNT" /usr/bin/env KREL="$KREL" KREL_EL2="$KREL_EL2" BUILD_EL2="$BU
 echo "fedora" > /etc/hostname
 id -u user >/dev/null 2>&1 || useradd -m -s /bin/bash -G wheel user
 echo "user:user" | chpasswd
-mkdir -p /etc/sudoers.d
-echo "%wheel ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/wheel-nopasswd
-chmod 440 /etc/sudoers.d/wheel-nopasswd
+# Stock Fedora has you set your own password in initial-setup; the shipped one
+# is a known default, so force a change on first login.
+passwd --expire user
+
+# Fedora's own kernels cannot boot this device, but dnf would keep updating
+# them and kernel-install would write each one into the 1 GiB ESP until it
+# fills. Remove them and keep dnf from pulling them back in.
+dnf -y remove kernel kernel-core kernel-modules kernel-modules-core || true
+cat > /etc/dnf/protected.d/kernel-gaokun3.conf <<'EOF'
+kernel-gaokun3
+EOF
+cat >> /etc/dnf/dnf.conf <<'EOF'
+exclude=kernel,kernel-core,kernel-modules,kernel-modules-core
+EOF
 cat > /etc/locale.conf <<'EOF'
 LANG=zh_CN.UTF-8
 LC_MESSAGES=zh_CN.UTF-8

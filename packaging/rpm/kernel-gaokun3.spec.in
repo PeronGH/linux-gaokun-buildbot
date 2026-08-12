@@ -57,6 +57,15 @@ if [ "$1" -ge 1 ] && command -v dracut >/dev/null 2>&1 && command -v kernel-inst
     KERNEL_INSTALL_CONF_ROOT="$temp_conf_root" \
         kernel-install --make-entry-directory=yes --entry-token=machine-id add \
         @KREL@ /boot/vmlinuz-@KREL@ >/dev/null 2>&1 || :
+
+    # As on stock Fedora, installing a kernel makes it the one that boots.
+    # Only the standard kernel claims the default; EL2 is opted into from the
+    # boot menu, so it must never take it.
+    if [ "@IS_DEFAULT_KERNEL@" = "1" ] && [ -s /etc/machine-id ] &&
+       [ -f /boot/efi/loader/loader.conf ]; then
+        sed -i "s|^default .*|default $(cat /etc/machine-id)-@KREL@.conf|" \
+            /boot/efi/loader/loader.conf
+    fi
 fi
 
 %preun
