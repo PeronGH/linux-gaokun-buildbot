@@ -96,19 +96,17 @@ EOF
 cat >> /etc/dnf/dnf.conf <<'EOF'
 excludepkgs=kernel,kernel-core,kernel-modules,kernel-modules-core
 EOF
+# A language is a property of whoever ends up using the device, not of the
+# device, so do not presume one. en_US.UTF-8 is Fedora's own fallback and is
+# only here because something has to be set until the user picks in Settings;
+# the language packs for other locales are installed and ready to switch to.
 cat > /etc/locale.conf <<'EOF'
-LANG=zh_CN.UTF-8
-LC_MESSAGES=zh_CN.UTF-8
+LANG=en_US.UTF-8
 EOF
 
 mkdir -p /var/lib/AccountsService/users
-cat > /var/lib/AccountsService/users/user <<'EOF'
-[User]
-Language=zh_CN.UTF-8
-EOF
 cat > /var/lib/AccountsService/users/gdm <<'EOF'
 [User]
-Language=zh_CN.UTF-8
 SystemAccount=true
 EOF
 

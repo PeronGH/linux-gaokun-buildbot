@@ -136,9 +136,6 @@ Use `dnf --installroot` to install Fedora 44 GNOME Desktop, with additional boot
 mkdir -p $ROOTFS_DIR
 
 sudo dnf -y install glibc-langpack-en glibc-langpack-zh
-export LANG=zh_CN.UTF-8
-export LC_ALL=zh_CN.UTF-8
-export LANGUAGE=zh_CN:zh
 
 # First step: install base system, locale and langpacks
 sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
@@ -153,11 +150,10 @@ sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-hos
 
 sudo mkdir -p $ROOTFS_DIR/etc
 sudo tee $ROOTFS_DIR/etc/locale.conf > /dev/null <<EOF
-LANG=zh_CN.UTF-8
-LC_MESSAGES=zh_CN.UTF-8
+LANG=en_US.UTF-8
 EOF
 
-# Second step: install desktop environment and applications, can more reliably pull Chinese translation subpackages into rootfs
+# Second step: install desktop environment and applications, which reliably pulls the matching translation subpackages into rootfs
 sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
     --exclude=gnome-boxes,gnome-connections,snapshot,gnome-weather,gnome-contacts,gnome-maps,simple-scan,gnome-clocks,gnome-calculator,gnome-calendar,amd-gpu-firmware,intel-gpu-firmware,linux-firmware,nvidia-gpu-firmware,toolbox,unoconv,mediawriter \
     install \
