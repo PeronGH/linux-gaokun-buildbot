@@ -235,12 +235,13 @@ sudo cp $GAOKUN_DIR/tools/touchscreen-tuner/touchscreen-tune.desktop \
     $ROOTFS_DIR/usr/share/applications/touchscreen-tune.desktop
 sudo chmod +x $ROOTFS_DIR/usr/local/bin/touchscreen-tune
 
-# GDM monitor sync script and service
-sudo cp $GAOKUN_DIR/tools/monitors/gdm-monitor-sync \
-    $ROOTFS_DIR/usr/local/bin/
-sudo cp $GAOKUN_DIR/tools/monitors/gdm-monitor-sync.service \
-    $ROOTFS_DIR/etc/systemd/system/
-sudo chmod +x $ROOTFS_DIR/usr/local/bin/gdm-monitor-sync
+# Panel layout for the login screen and for accounts created on first boot
+sudo install -Dm644 $GAOKUN_DIR/tools/image-assets/usr/local/share/gaokun/monitors.xml \
+    $ROOTFS_DIR/etc/skel/.config/monitors.xml
+sudo install -d -m 0755 $ROOTFS_DIR/var/lib/gdm/.config
+sudo install -m 0644 $GAOKUN_DIR/tools/image-assets/usr/local/share/gaokun/monitors.xml \
+    $ROOTFS_DIR/var/lib/gdm/.config/monitors.xml
+sudo chroot $ROOTFS_DIR chown -R gdm:gdm /var/lib/gdm/.config
 
 # Bluetooth address patch script and service
 sudo cp $GAOKUN_DIR/tools/bluetooth/patch-nvm-bdaddr.py \
@@ -363,8 +364,7 @@ cat > /etc/kernel/devicetree <<EOF
 qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
-systemctl enable gdm-monitor-sync.service \
-    patch-nvm-bdaddr.service
+systemctl enable patch-nvm-bdaddr.service
 
 dracut --force --kver $KREL
 if [ -n "$KREL_EL2" ]; then
