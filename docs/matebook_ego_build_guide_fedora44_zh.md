@@ -135,7 +135,7 @@ ccache -s
 ```bash
 mkdir -p $ROOTFS_DIR
 
-sudo dnf -y install glibc-langpack-en glibc-langpack-zh
+sudo dnf -y install glibc-langpack-en
 
 # 第一步先安装基础系统、locale 和 langpacks
 sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
@@ -143,8 +143,7 @@ sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-hos
     install \
     @core @standard \
     systemd-boot-unsigned alsa-ucm \
-    glibc-langpack-en glibc-langpack-zh \
-    langpacks-en langpacks-zh_CN \
+    glibc-langpack-en langpacks-en \
     google-noto-color-emoji-fonts google-noto-emoji-fonts \
     i2c-tools alsa-utils pipewire-utils
 
@@ -158,7 +157,7 @@ sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-hos
     --exclude=gnome-boxes,gnome-connections,snapshot,gnome-weather,gnome-contacts,gnome-maps,simple-scan,gnome-clocks,gnome-calculator,gnome-calendar,amd-gpu-firmware,intel-gpu-firmware,linux-firmware,nvidia-gpu-firmware,toolbox,unoconv,mediawriter \
     install \
     @gnome-desktop @workstation-product \
-    fcitx5-chinese-addons gnome-tweaks gnome-extensions-app telnet mpv v4l-utils vim nano ripgrep git htop fastfetch screen firefox
+    gnome-tweaks gnome-extensions-app telnet mpv v4l-utils vim nano ripgrep git htop fastfetch screen firefox
 
 # 安装 RPMFusion 并添加 libavcodec-freeworld（硬解视频编码支持）
 sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \

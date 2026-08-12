@@ -11,7 +11,7 @@ The image pipeline now uses `systemd-boot` by default and can optionally build a
 These are ordered. When they conflict, the earlier one wins.
 
 1. **The best experience on the MateBook E Go.** Hardware enablement comes before everything else. The DTS, the kernel config, the firmware bundle, and cmdline entries such as `fbcon=rotate:1` and `usbhid.quirks` exist because this device needs them, and they stay even where they are unlike stock Fedora. RPM Fusion and `libavcodec-freeworld` ship enabled for the same reason: media playback should work out of the box.
-2. **A stock Fedora experience.** Where the hardware does not force our hand, follow upstream Fedora instead of inventing: Fedora's Btrfs layout (`root` and `home` subvolumes, `compress=zstd:1`), SELinux enforcing, no passwordless `sudo`. Deviations should be deliberate, and worth writing down.
+2. **A stock Fedora experience.** The reference is Fedora's own aarch64 Workstation raw disk image, `Fedora-Workstation-Disk-*.aarch64.raw.xz` under [`releases/<release>/Workstation/aarch64/images/`](https://download.fedoraproject.org/pub/fedora/linux/releases/), for whichever release is being built. [Fedora's Workstation documentation](https://docs.fedoraproject.org/en-US/workstation-docs/) counts as reference too: anything Fedora documents for aarch64 Workstation applies here. Where the hardware does not force our hand, match it rather than invent: Fedora's Btrfs layout (`root` and `home` subvolumes, `compress=zstd:1`), SELinux enforcing, no passwordless `sudo`. It also decides what we leave out — if that image does not ship a Pinyin input method or a language's translations, neither do we. Deviations should be deliberate, and worth writing down.
 3. **Safe to daily drive.** It should not be easier to break than an x86 Fedora install: `kernel-gaokun3` is protected from removal, Fedora's own kernels are excluded because they cannot boot this device, and installing a kernel makes it the one that boots. This ranks last on purpose, so guard rails Fedora itself does not have are not added. `dnf system-upgrade` is left alone even though it is a real risk here.
 
 ## What is included
@@ -76,6 +76,21 @@ The image and local-install workflows now follow the standard `kernel-install` +
 - EL2 implementation notes: [English](docs/el2_kvm_guide_en.md) | [中文](docs/el2_kvm_guide_zh.md)
 - Awesome Gaokun3: [English](docs/awesome_gaokun3_en.md) | [中文](docs/awesome_gaokun3_zh.md)
 - Build guide – Fedora 44: [English](docs/matebook_ego_build_guide_fedora44_en.md) | [中文](docs/matebook_ego_build_guide_fedora44_zh.md)
+
+### Language and input
+
+The image ships `LANG=en_US.UTF-8` and no input method, matching the reference
+Workstation image. Add your language in GNOME Settings and Fedora offers the
+matching translations and input method.
+
+For Chinese specifically there are two reasonable paths, and an image cannot
+pick between them for you:
+
+- `fcitx5-chinese-addons` works immediately, and its Pinyin dictionary is
+  usually paired with `fcitx5-pinyin-zhwiki`.
+- `fcitx5-rime` with [rime-ice](https://github.com/iDvel/rime-ice) (雾凇拼音) is
+  what most people who care end up on. It needs its own configuration, which is
+  the point of it.
 
 ## Feature Support
 

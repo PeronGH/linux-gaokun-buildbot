@@ -11,7 +11,7 @@
 以下目标按优先级排列，冲突时以靠前者为准。
 
 1. **在 MateBook E Go 上获得最佳体验。** 硬件适配优先于其他一切。DTS、内核配置、固件集，以及 `fbcon=rotate:1`、`usbhid.quirks` 等 cmdline 参数都是这台设备所必需的，即使与原版 Fedora 不同也会保留。启用 RPM Fusion 和 `libavcodec-freeworld` 同样出于这个原因：开箱即用地播放媒体。
-2. **接近原版 Fedora 的体验。** 在硬件没有强制要求的地方，遵循上游 Fedora 而非自创方案：Fedora 的 Btrfs 布局（`root` 与 `home` 子卷、`compress=zstd:1`）、SELinux enforcing、不使用免密 `sudo`。任何偏离都应是有意为之，并且值得记录下来。
+2. **接近原版 Fedora 的体验。** 基准是 Fedora 官方的 aarch64 Workstation raw 磁盘镜像，即所构建版本对应的 [`releases/<release>/Workstation/aarch64/images/`](https://download.fedoraproject.org/pub/fedora/linux/releases/) 下的 `Fedora-Workstation-Disk-*.aarch64.raw.xz`，不锁定具体版本号。[Fedora 的 Workstation 文档](https://docs.fedoraproject.org/en-US/workstation-docs/) 同样作为基准：Fedora 针对 aarch64 Workstation 的任何说明在这里都适用。在硬件没有强制要求的地方，与之保持一致而非自创方案：Fedora 的 Btrfs 布局（`root` 与 `home` 子卷、`compress=zstd:1`）、SELinux enforcing、不使用免密 `sudo`。它同样决定了我们不做什么：如果那个镜像不预装拼音输入法或某种语言的翻译，我们也不装。任何偏离都应是有意为之，并且值得记录下来。
 3. **可以长期日常使用。** 不应比 x86 Fedora 安装更容易被搞坏：`kernel-gaokun3` 受删除保护、排除无法引导本设备的 Fedora 官方内核、安装内核即成为默认启动项。此项特意排在最后，因此不会添加 Fedora 本身没有的额外限制，`dnf system-upgrade` 即使在这里确实有风险也不做拦截。
 
 ## 包含内容
@@ -76,6 +76,17 @@
 - EL2 实现说明：[English](el2_kvm_guide_en.md) | [中文](el2_kvm_guide_zh.md)
 - Awesome Gaokun3：：[English](awesome_gaokun3_en.md) | [中文](awesome_gaokun3_zh.md)
 - 构建指南 – Fedora 44：[English](matebook_ego_build_guide_fedora44_en.md) | [中文](matebook_ego_build_guide_fedora44_zh.md)
+
+### 语言与输入法
+
+镜像只设置 `LANG=en_US.UTF-8`，不预装任何输入法，与作为基准的 Workstation 镜像一致。
+在 GNOME 设置中添加所需语言后，Fedora 会提示安装对应的翻译和输入法。
+
+中文输入有两条都算合理的路线，镜像无法替你选择：
+
+- `fcitx5-chinese-addons` 开箱即用，通常再配合 `fcitx5-pinyin-zhwiki` 词库。
+- `fcitx5-rime` 搭配 [rime-ice](https://github.com/iDvel/rime-ice)（雾凇拼音），是比较讲究的
+  用户最终的选择，但需要自己配置，而这恰恰是它的意义所在。
 
 ## 功能支持
 
