@@ -24,10 +24,10 @@ mkdir -p %{buildroot}
 cp -a usr %{buildroot}/
 
 %post
-/usr/sbin/depmod -a @KREL@ >/dev/null 2>&1 || :
+/usr/sbin/depmod -a @KREL@ || echo "warning: depmod failed for @KREL@" >&2
 
 %postun
-/usr/sbin/depmod -a @KREL@ >/dev/null 2>&1 || :
+/usr/sbin/depmod -a @KREL@ || echo "warning: depmod failed for @KREL@" >&2
 
 %files
 /usr/lib/modules/@KREL@

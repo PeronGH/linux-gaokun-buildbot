@@ -32,8 +32,7 @@ STEAM_RT="$STEAM_ROOT/steamrtarm64"
 BOOTSTRAP_URL="https://client-update.steamstatic.com/bins_linuxarm64_linuxarm64.zip.0f11199e9a58a0ec4aab3833152ada1b2e56c846"
 
 echo "==> Install dependencies"
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl unzip xdg-utils libnss3 libgtk2.0-0t64 libgtk2.0-common libvpx12 libsdl3-0 libavif16
+sudo dnf install -y ca-certificates curl unzip xdg-utils nss gtk2 libvpx SDL3 libavif
 
 echo "==> Prepare Steam directory"
 mkdir -p "$STEAM_ROOT/package" "$HOME/.steam" "$HOME/.local/share/applications"
@@ -52,8 +51,15 @@ ln -sfn "$STEAM_ROOT" "$HOME/.steam/steam"
 chmod -R u+rwX "$STEAM_RT"
 
 echo "==> Add libvpx compatibility link"
-if [ ! -e /usr/lib/aarch64-linux-gnu/libvpx.so.6 ]; then
-  sudo ln -s /usr/lib/aarch64-linux-gnu/libvpx.so.12 /usr/lib/aarch64-linux-gnu/libvpx.so.6
+# The Steam bootstrap looks for libvpx.so.6; point it at whatever soname this
+# Fedora actually ships rather than assuming a version.
+if [ ! -e /usr/lib64/libvpx.so.6 ]; then
+  VPX_LIB="$(ldconfig -p | awk '/libvpx\.so\.[0-9]+$/ {print $NF; exit}')"
+  if [ -z "$VPX_LIB" ]; then
+    echo "libvpx not found; install it before running Steam" >&2
+    exit 1
+  fi
+  sudo ln -s "$VPX_LIB" /usr/lib64/libvpx.so.6
 fi
 
 echo "==> Create application menu launcher"

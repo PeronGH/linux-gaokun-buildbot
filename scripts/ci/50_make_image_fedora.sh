@@ -115,11 +115,11 @@ install -d -o gdm -g gdm -m 0755 /var/lib/gdm/.config
 install -o gdm -g gdm -m 0644 /usr/local/share/gaokun/monitors.xml \
   /var/lib/gdm/.config/monitors.xml
 
-systemctl enable gdm NetworkManager patch-nvm-bdaddr.service || true
+systemctl enable gdm NetworkManager patch-nvm-bdaddr.service
 
 # The Workstation working group has openssh-server disabled by default, while
 # Fedora's general preset enables it, so say so explicitly.
-systemctl disable sshd.service || true
+systemctl disable sshd.service
 
 cat > /etc/dracut.conf.d/matebook.conf <<'MODEOF'
 hostonly="no"
