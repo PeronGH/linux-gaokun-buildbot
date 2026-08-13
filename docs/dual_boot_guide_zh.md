@@ -4,6 +4,10 @@
 
 本文档以 `systemd-boot` 为例，接管默认启动项，实现 Windows / Linux 二选一
 
+现在也可以直接在本机上完成同样的事情，见 [rescue_usb_guide_zh.md](rescue_usb_guide_zh.md)。
+该方式不需要 Windows 和 DiskGenius，并且用不到下文的第二节第 5 步与第四节——用
+`kernel-install` 重新生成 BLS 条目会写入真实的 UUID，不需要手工去凑得和镜像一致。
+
 ## 一、准备
 
 - 工具：DiskGenius（下文简称 DG）

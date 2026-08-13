@@ -4,6 +4,9 @@ English | [中文](dual_boot_guide_zh.md)
 
 This document uses `systemd-boot` as an example to take over the default boot entry, enabling Windows / Linux dual boot selection.
 
+There is now a second way to do this from the device itself: see
+[rescue_usb_guide_en.md](rescue_usb_guide_en.md). That route needs no Windows and no DiskGenius, and it makes sections 2.5 and 4 below unnecessary — regenerating the BLS entry with `kernel-install` writes the real UUIDs, so nothing has to be made to match the image by hand.
+
 ## 1. Preparation
 
 - Tools: DiskGenius (referred to as DG below)

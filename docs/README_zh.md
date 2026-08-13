@@ -40,6 +40,7 @@
 ### Release 产物
 
 - Fedora 镜像 release 包含压缩后的可安装镜像。
+- Gaokun 救援 U 盘 release 包含一个纯命令行的 Fedora 镜像，可从 U 盘启动本机，用于把上面的镜像安装到内置硬盘，或修复无法启动的系统。它不包含安装器，操作步骤见 [rescue_usb_guide_zh.md](rescue_usb_guide_zh.md)。**该镜像使用公开的密码（`fedora` / `fedora`）并默认启用 `sshd`**，运行期间同一网络上的任何人都可以登录。
 - Gaokun RPM release 包含镜像工作流所使用的独立内核与固件软件包集合。
 
 ### 补丁来源
@@ -73,6 +74,7 @@
 ## 快速开始
 
 - Release：<https://github.com/KawaiiHachimi/linux-gaokun-build/releases>
+- 救援 U 盘指南：[English](rescue_usb_guide_en.md) | [中文](rescue_usb_guide_zh.md)
 - 双系统引导指南：[English](dual_boot_guide_en.md) | [中文](dual_boot_guide_zh.md)
 - EL2 实现说明：[English](el2_kvm_guide_en.md) | [中文](el2_kvm_guide_zh.md)
 - Awesome Gaokun3：：[English](awesome_gaokun3_en.md) | [中文](awesome_gaokun3_zh.md)

@@ -1,0 +1,137 @@
+name: Build Image - Gaokun3 Rescue USB
+
+on:
+  workflow_dispatch:
+    inputs:
+      fedora_release:
+        description: Fedora release version
+        required: true
+        default: "44"
+      kernel_tag:
+        description: Linux kernel tag
+        required: true
+        default: "v7.2-rc2"
+      extra_packages:
+        description: Extra packages to install (space-separated)
+        required: true
+        default: ""
+      rebuild_package_rpms:
+        description: Rebuild gaokun package RPMs before image build
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-package-rpms:
+    if: ${{ github.event.inputs.rebuild_package_rpms == 'true' }}
+    uses: ./.github/workflows/gaokun3-package-rpms.yml
+    with:
+      kernel_tag: ${{ github.event.inputs.kernel_tag }}
+      build_el2: false
+    secrets: inherit
+
+  build-and-release:
+    needs: build-package-rpms
+    if: ${{ !cancelled() && (needs.build-package-rpms.result == 'success' || needs.build-package-rpms.result == 'skipped') }}
+    runs-on: ubuntu-24.04-arm
+    env:
+      TZ: UTC
+      FEDORA_RELEASE: ${{ github.event.inputs.fedora_release }}
+      KERNEL_TAG: ${{ github.event.inputs.kernel_tag }}
+      EXTRA_PACKAGES: ${{ github.event.inputs.extra_packages }}
+      BUILD_EL2: "false"
+      # A CLI rescue environment: @core plus what is needed before there is a
+      # network, plus the standard tools for partitioning, writing, chrooting
+      # and repairing an installation. Anything else is a dnf install away once
+      # nmtui has connected.
+      PACKAGE_SET: >-
+        @core
+        systemd-boot-unsigned efibootmgr
+        NetworkManager-wifi NetworkManager-tui wpa_supplicant openssh-server
+        gdisk parted dosfstools e2fsprogs btrfs-progs xfsprogs
+        nvme-cli cryptsetup lvm2 rsync
+        ntfs-3g ntfsprogs
+        arch-install-scripts policycoreutils selinux-policy-targeted
+        curl zstd xz jq tar
+        terminus-fonts-console glibc-langpack-en
+        tmux vim-enhanced nano less pciutils usbutils htop ddrescue smartmontools
+      EXCLUDED_PACKAGES: "linux-firmware,glibc-all-langpacks"
+      INSTALL_LANGS: en
+      ENABLE_RPMFUSION: "false"
+      # Unwritten space is zeroes and costs almost nothing once compressed, so
+      # this is sized with slack rather than trimmed to the rootfs.
+      IMAGE_SIZE: 6G
+      GAOKUN_DIR: ${{ github.workspace }}
+      WORKDIR: ${{ github.workspace }}/build-rescue
+      ROOTFS_DIR: ${{ github.workspace }}/build-rescue/rootfs
+      ARTIFACT_DIR: ${{ github.workspace }}/build-rescue/artifacts
+      PACKAGE_RPMS_DIR: ${{ github.workspace }}/build-rescue/package-rpms
+      IMAGE_FILE: ${{ github.workspace }}/build-rescue/gaokun3-rescue.img
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install host dependencies
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            rsync kmod curl jq \
+            parted dosfstools e2fsprogs zstd xz-utils
+
+      - name: Prepare build workspace
+        run: |
+          set -euxo pipefail
+          mkdir -p "$WORKDIR" "$ROOTFS_DIR" "$ARTIFACT_DIR"
+
+      - name: Fetch gaokun package RPMs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PACKAGE_RELEASE_TAG: ${{ needs.build-package-rpms.outputs.package_release_tag }}
+        run: |
+          chmod +x scripts/ci/10_fetch_package_rpms.sh
+          scripts/ci/10_fetch_package_rpms.sh
+
+      - name: Bootstrap Fedora rootfs
+        run: |
+          chmod +x scripts/ci/30_bootstrap_rootfs.sh
+          scripts/ci/30_bootstrap_rootfs.sh
+
+      - name: Create disk image and configure boot
+        run: |
+          chmod +x scripts/ci/55_make_image_rescue.sh
+          scripts/ci/55_make_image_rescue.sh
+
+      - name: Verify image invariants
+        run: |
+          chmod +x scripts/ci/56_verify_image_rescue.sh
+          scripts/ci/56_verify_image_rescue.sh
+
+      - name: Package image and generate release info
+        id: package
+        run: |
+          chmod +x scripts/ci/65_package_release_rescue.sh
+          scripts/ci/65_package_release_rescue.sh
+          TAG_NAME="$(cat "$WORKDIR/tag-name.txt")"
+          KREL="$(cat "$WORKDIR/kernel-release-export.txt")"
+          RELEASE_BODY_FILE="$(cat "$WORKDIR/release-body-file.txt")"
+          {
+            echo "tag_name=$TAG_NAME"
+            echo "artifact_dir=$ARTIFACT_DIR"
+            echo "kernel_release=$KREL"
+            echo "release_body_file=$RELEASE_BODY_FILE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.6.1
+        with:
+          tag_name: ${{ steps.package.outputs.tag_name }}
+          name: Gaokun3 Rescue USB - Fedora ${{ env.FEDORA_RELEASE }} - ${{ steps.package.outputs.kernel_release }}
+          body_path: ${{ steps.package.outputs.artifact_dir }}/${{ steps.package.outputs.release_body_file }}
+          files: |
+            ${{ steps.package.outputs.artifact_dir }}/gaokun3-rescue.img.zst
+            ${{ steps.package.outputs.artifact_dir }}/SHA256SUMS

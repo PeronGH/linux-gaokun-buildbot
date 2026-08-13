@@ -40,6 +40,7 @@ The package pipeline builds and installs dedicated package sets:
 ### Releases
 
 - Fedora image releases contain compressed installable images.
+- Gaokun rescue USB releases contain a CLI-only Fedora image that boots this device from a USB stick, for installing the image above onto the internal disk or repairing an installation that no longer boots. It ships no installer: the procedure is [rescue_usb_guide_en.md](docs/rescue_usb_guide_en.md). **It has a published password (`fedora` / `fedora`) and `sshd` enabled**, so anyone on the same network can log in while it is running.
 - Gaokun RPM releases contain the standalone kernel and firmware package sets used by the image workflow.
 
 ### Patch Sources
@@ -73,6 +74,7 @@ The image and local-install workflows now follow the standard `kernel-install` +
 ## Getting started
 
 - Release: <https://github.com/KawaiiHachimi/linux-gaokun-build/releases>
+- Rescue USB guide: [English](docs/rescue_usb_guide_en.md) | [中文](docs/rescue_usb_guide_zh.md)
 - Dual-boot guide: [English](docs/dual_boot_guide_en.md) | [中文](docs/dual_boot_guide_zh.md)
 - EL2 implementation notes: [English](docs/el2_kvm_guide_en.md) | [中文](docs/el2_kvm_guide_zh.md)
 - Awesome Gaokun3: [English](docs/awesome_gaokun3_en.md) | [中文](docs/awesome_gaokun3_zh.md)

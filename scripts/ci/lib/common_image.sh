@@ -1,6 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Module autoloading and dependency ordering for the device. The "rescue"
+# profile drops audio and bluetooth, which a CLI rescue environment has no use
+# for, and keeps the EC/battery, panel and Wi-Fi modules.
+install_module_config() {
+  local rootfs_dir="$1"
+  local gaokun_dir="$2"
+  local profile="$3"
+  local conf
+
+  case "$profile" in
+    desktop)
+      sudo mkdir -p "$rootfs_dir/etc/modules-load.d" "$rootfs_dir/etc/modprobe.d"
+      sudo cp -a "$gaokun_dir/tools/image-assets/etc/modules-load.d/." \
+        "$rootfs_dir/etc/modules-load.d/"
+      sudo cp -a "$gaokun_dir/tools/image-assets/etc/modprobe.d/." \
+        "$rootfs_dir/etc/modprobe.d/"
+      ;;
+    rescue)
+      for conf in battery display wifi; do
+        sudo install -Dm644 \
+          "$gaokun_dir/tools/image-assets/etc/modules-load.d/$conf.conf" \
+          "$rootfs_dir/etc/modules-load.d/$conf.conf"
+      done
+      ;;
+    *)
+      echo "unknown module config profile: $profile" >&2
+      return 1
+      ;;
+  esac
+}
+
 install_common_image_assets() {
   local rootfs_dir="$1"
   local gaokun_dir="$2"
@@ -26,8 +57,6 @@ install_common_image_assets() {
   local asset src dest
 
   sudo mkdir -p \
-    "$rootfs_dir/etc/modules-load.d" \
-    "$rootfs_dir/etc/modprobe.d" \
     "$rootfs_dir/etc/udev/rules.d" \
     "$rootfs_dir/etc/systemd/system" \
     "$rootfs_dir/etc/xdg" \
@@ -37,10 +66,7 @@ install_common_image_assets() {
     "$rootfs_dir/usr/share/alsa/ucm2/Qualcomm/sc8280xp" \
     "$rootfs_dir/usr/share/applications"
 
-  sudo cp -a "$gaokun_dir/tools/image-assets/etc/modules-load.d/." \
-    "$rootfs_dir/etc/modules-load.d/"
-  sudo cp -a "$gaokun_dir/tools/image-assets/etc/modprobe.d/." \
-    "$rootfs_dir/etc/modprobe.d/"
+  install_module_config "$rootfs_dir" "$gaokun_dir" desktop
 
   for asset in "${executable_assets[@]}"; do
     src="${asset%%:*}"
