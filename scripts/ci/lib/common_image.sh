@@ -16,7 +16,12 @@ install_common_image_assets() {
     "tools/touchscreen-tuner/tune.py:/usr/local/lib/gaokun-touchscreen-tuner/tune.py"
     "tools/touchscreen-tuner/tune-icon.svg:/usr/local/lib/gaokun-touchscreen-tuner/tune-icon.svg"
     "tools/touchscreen-tuner/touchscreen-tune.desktop:/usr/share/applications/touchscreen-tune.desktop"
-    "tools/image-assets/usr/local/share/gaokun/monitors.xml:/usr/local/share/gaokun/monitors.xml"
+    # The panel is portrait and has to be rotated before anyone has logged in.
+    # mutter reads this system-level file in every session, so it covers the
+    # first-boot setup screen and the login screen, which run as their own users,
+    # as well as accounts created later. A user changing rotation in Settings
+    # writes ~/.config/monitors.xml, which takes precedence.
+    "tools/image-assets/etc/xdg/monitors.xml:/etc/xdg/monitors.xml"
   )
   local asset src dest
 
@@ -25,12 +30,12 @@ install_common_image_assets() {
     "$rootfs_dir/etc/modprobe.d" \
     "$rootfs_dir/etc/udev/rules.d" \
     "$rootfs_dir/etc/systemd/system" \
+    "$rootfs_dir/etc/xdg" \
     "$rootfs_dir/etc/gaokun" \
     "$rootfs_dir/usr/local/bin" \
     "$rootfs_dir/usr/local/lib/gaokun-touchscreen-tuner" \
     "$rootfs_dir/usr/share/alsa/ucm2/Qualcomm/sc8280xp" \
-    "$rootfs_dir/usr/share/applications" \
-    "$rootfs_dir/usr/local/share/gaokun"
+    "$rootfs_dir/usr/share/applications"
 
   sudo cp -a "$gaokun_dir/tools/image-assets/etc/modules-load.d/." \
     "$rootfs_dir/etc/modules-load.d/"

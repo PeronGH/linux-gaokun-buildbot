@@ -107,14 +107,6 @@ cat > /var/lib/AccountsService/users/gdm <<'EOF'
 SystemAccount=true
 EOF
 
-# The panel is portrait and needs a rotation applied before anyone has logged
-# in, so write the layout for the login screen and for accounts created later.
-# gdm reads it from its own home; a session reads it from skel.
-install -Dm644 /usr/local/share/gaokun/monitors.xml /etc/skel/.config/monitors.xml
-install -d -o gdm -g gdm -m 0755 /var/lib/gdm/.config
-install -o gdm -g gdm -m 0644 /usr/local/share/gaokun/monitors.xml \
-  /var/lib/gdm/.config/monitors.xml
-
 systemctl enable gdm NetworkManager patch-nvm-bdaddr.service
 
 # The Workstation working group has openssh-server disabled by default, while

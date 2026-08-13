@@ -235,14 +235,6 @@ sudo cp $GAOKUN_DIR/tools/touchscreen-tuner/touchscreen-tune.desktop \
     $ROOTFS_DIR/usr/share/applications/touchscreen-tune.desktop
 sudo chmod +x $ROOTFS_DIR/usr/local/bin/touchscreen-tune
 
-# 登录界面以及首次启动创建的账户所使用的屏幕布局
-sudo install -Dm644 $GAOKUN_DIR/tools/image-assets/usr/local/share/gaokun/monitors.xml \
-    $ROOTFS_DIR/etc/skel/.config/monitors.xml
-sudo install -d -m 0755 $ROOTFS_DIR/var/lib/gdm/.config
-sudo install -m 0644 $GAOKUN_DIR/tools/image-assets/usr/local/share/gaokun/monitors.xml \
-    $ROOTFS_DIR/var/lib/gdm/.config/monitors.xml
-sudo chroot $ROOTFS_DIR chown -R gdm:gdm /var/lib/gdm/.config
-
 # 蓝牙地址修补脚本和服务
 sudo cp $GAOKUN_DIR/tools/bluetooth/patch-nvm-bdaddr.py \
     $ROOTFS_DIR/usr/local/bin/
@@ -254,12 +246,9 @@ sudo chmod +x $ROOTFS_DIR/usr/local/bin/patch-nvm-bdaddr.py
 sudo cp $GAOKUN_DIR/tools/audio/sc8280xp.conf \
     $ROOTFS_DIR/usr/share/alsa/ucm2/Qualcomm/sc8280xp/
 
-# 复用 CI 镜像流水线里的共享资源
-sudo mkdir -p $ROOTFS_DIR/usr/local/share/gaokun
+# 复用 CI 镜像流水线里的共享资源，其中包括 etc/xdg/monitors.xml 里的屏幕布局
 sudo cp -a $GAOKUN_DIR/tools/image-assets/etc/. \
     $ROOTFS_DIR/etc/
-sudo cp $GAOKUN_DIR/tools/image-assets/usr/local/share/gaokun/monitors.xml \
-    $ROOTFS_DIR/usr/local/share/gaokun/monitors.xml
 
 # bluetooth.conf 现在会同时加载 btqca 和 uhid，避免 BLE HoG 鼠标/键盘配对后立刻断开。
 # patch-nvm-bdaddr.service 会在 bluetooth.service 之前修补 qca/wcnhpnv21g.bin 中的 BDADDR。
