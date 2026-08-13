@@ -29,8 +29,10 @@ mkdir -p %{buildroot}
 cp -a usr %{buildroot}/
 
 %files
-# qcom-firmware owns everything above this; the model directory is ours.
+# qcom-firmware owns everything above these; the model directory and the
+# topology name the sound card asks for are ours.
 /usr/lib/firmware/qcom/sc8280xp/HUAWEI
+/usr/lib/firmware/qcom/sc8280xp/SC8280XP-HUAWEI-GAOKUN3-tplg.bin
 
 %changelog
 * Sat Mar 28 2026 cool <bilibili@att.net> - @FW_VERSION@-1
