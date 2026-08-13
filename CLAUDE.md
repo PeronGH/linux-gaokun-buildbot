@@ -26,6 +26,8 @@ Three GitHub Actions workflows, all `workflow_dispatch`, all sharing the numbere
 | `fedora-gaokun3-release.yml` | Fedora Workstation disk image; optionally calls the RPM workflow first |
 | `gaokun3-rescue-release.yml` | CLI-only USB rescue image |
 
+`build.env` pins `KERNEL_TAG` and `FEDORA_RELEASE` for all of them — workflows read it into `$GITHUB_ENV` right after checkout, `scripts/local/build_kernel.sh` sources it, and the build guide tells the reader to. Neither value is a dispatch input, because `patches/` applies to exactly one kernel tag and the package set to one Fedora release; bumping either belongs in the commit that refreshes what depends on it.
+
 Script order is the numeric prefix: `10` fetch prebuilt RPMs from a release → `20` build kernel variants → `30` bootstrap the rootfs with dnf → `50`/`55` create the image → `60`/`65` compress and write release notes. `70` builds the RPMs and is what `10` later downloads. Each script takes its inputs as required environment variables checked with `: "${VAR:?}"` at the top; the workflow YAML is the only caller that sets them.
 
 ## Verifying a change

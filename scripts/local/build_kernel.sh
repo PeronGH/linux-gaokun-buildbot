@@ -4,7 +4,10 @@ set -euo pipefail
 # shellcheck source=../lib/import_local_sources.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../lib/import_local_sources.sh"
 
-KERNEL_TAG="${KERNEL_TAG:-v7.2-rc2}"
+# The tag patches/ applies to, pinned next to them rather than repeated here.
+# shellcheck source=../../build.env
+. "$(dirname "${BASH_SOURCE[0]}")/../../build.env"
+
 GAOKUN_DIR="${GAOKUN_DIR:-$HOME/gaokun/linux-gaokun-buildbot}"
 KERN_SRC="${KERN_SRC:-$HOME/gaokun/mainline-linux}"
 KERN_OUT="${KERN_OUT:-$HOME/gaokun/kernel-out}"

@@ -40,9 +40,12 @@ Prepare source and working directory:
 mkdir -p ~/gaokun/matebook-build-fedora
 
 cd ~/gaokun
+# The kernel tag and Fedora release this tree is built against
+. ~/gaokun/linux-gaokun-buildbot/build.env
+
 # Get specified version of Linux mainline source
 if [ ! -d "mainline-linux" ]; then
-    git clone --depth 1 --branch v7.2-rc2 \
+    git clone --depth 1 --branch $KERNEL_TAG \
         https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
         mainline-linux
 fi
@@ -136,7 +139,7 @@ mkdir -p $ROOTFS_DIR
 sudo dnf -y install glibc-langpack-en
 
 # First step: install base system, locale and langpacks
-sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
+sudo dnf --installroot=$ROOTFS_DIR --releasever=$FEDORA_RELEASE --forcearch=aarch64 --use-host-config -y \
     --exclude=gnome-boxes,gnome-connections,snapshot,gnome-weather,gnome-contacts,gnome-maps,simple-scan,gnome-clocks,gnome-calculator,gnome-calendar \
     install \
     @core @standard \
@@ -149,21 +152,21 @@ sudo mkdir -p $ROOTFS_DIR/etc
 sudo systemd-firstboot --root=$ROOTFS_DIR --locale=en_US.UTF-8 --keymap=us --timezone=UTC
 
 # Second step: install desktop environment and applications, which reliably pulls the matching translation subpackages into rootfs
-sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
+sudo dnf --installroot=$ROOTFS_DIR --releasever=$FEDORA_RELEASE --forcearch=aarch64 --use-host-config -y \
     --exclude=gnome-boxes,gnome-connections,snapshot,gnome-weather,gnome-contacts,gnome-maps,simple-scan,gnome-clocks,gnome-calculator,gnome-calendar,amd-gpu-firmware,intel-gpu-firmware,linux-firmware,nvidia-gpu-firmware,toolbox,unoconv,mediawriter \
     install \
     @gnome-desktop @workstation-product \
     gnome-tweaks gnome-extensions-app telnet mpv v4l-utils vim nano ripgrep git htop fastfetch screen firefox
 
 # Install RPMFusion and add libavcodec-freeworld (hardware video decoding support)
-sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
+sudo dnf --installroot=$ROOTFS_DIR --releasever=$FEDORA_RELEASE --forcearch=aarch64 --use-host-config -y \
     install \
-    https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm
+    https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$FEDORA_RELEASE.noarch.rpm
 
 sudo mkdir -p /etc/pki/rpm-gpg
 sudo cp -a $ROOTFS_DIR/etc/pki/rpm-gpg/. /etc/pki/rpm-gpg/
 
-sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
+sudo dnf --installroot=$ROOTFS_DIR --releasever=$FEDORA_RELEASE --forcearch=aarch64 --use-host-config -y \
     --setopt=reposdir="$ROOTFS_DIR/etc/yum.repos.d,/etc/yum.repos.d" \
     install \
     libavcodec-freeworld
