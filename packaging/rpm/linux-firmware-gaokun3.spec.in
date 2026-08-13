@@ -4,15 +4,19 @@
 Name:           linux-firmware-gaokun3
 Version:        @FW_VERSION@
 Release:        1%{?dist}
-Summary:        Firmware bundle for gaokun3
+Summary:        Model-specific firmware for gaokun3
 License:        Redistributable, no modification permitted
 BuildArch:      noarch
 Source0:        @SOURCE_NAME@
-Conflicts:      atheros-firmware qcom-firmware
-Obsoletes:      atheros-firmware qcom-firmware
+# The generic WCN6855, QCA Bluetooth and Adreno firmware this device also needs
+# comes from Fedora, which ships it unchanged or newer. This package adds only
+# what Fedora has no copy of.
+Requires:       atheros-firmware
+Requires:       qcom-firmware
 
 %description
-Firmware bundle for Huawei MateBook E Go 2023 (gaokun3) image builds.
+Model-specific firmware for the Huawei MateBook E Go 2023 (gaokun3): the DSP,
+display and topology files that Fedora's linux-firmware packages do not carry.
 
 %prep
 %setup -q -c -T
@@ -25,9 +29,8 @@ mkdir -p %{buildroot}
 cp -a usr %{buildroot}/
 
 %files
-/usr/lib/firmware/ath11k/*
-/usr/lib/firmware/qca/*
-/usr/lib/firmware/qcom/*
+# qcom-firmware owns everything above this; the model directory is ours.
+/usr/lib/firmware/qcom/sc8280xp/HUAWEI
 
 %changelog
 * Sat Mar 28 2026 cool <bilibili@att.net> - @FW_VERSION@-1

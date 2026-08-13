@@ -209,7 +209,8 @@ if [ -n "$KREL_EL2" ]; then
         $ROOTFS_DIR/boot/dtb-$KREL_EL2/qcom/
 fi
 
-# Directly copy the project's built-in minimum firmware set
+# Copy the model-specific firmware. Everything generic this device needs -
+# WCN6855, QCA Bluetooth, Adreno - comes from Fedora's own firmware packages.
 sudo mkdir -p $ROOTFS_DIR/lib/firmware
 sudo cp -r $FW_REPO/. $ROOTFS_DIR/lib/firmware/
 
@@ -331,7 +332,7 @@ Execute inside chroot:
 cat > /etc/dracut.conf.d/matebook.conf <<EOF
 hostonly="no"
 add_drivers+=" btrfs nvme phy-qcom-qmp-pcie phy-qcom-qmp-combo phy-qcom-qmp-usb phy-qcom-snps-femto-v2 usb-storage uas typec pci-pwrctrl-pwrseq ath11k ath11k_pci i2c-hid-of lpasscc_sc8280xp snd-soc-sc8280xp pinctrl_sc8280xp_lpass_lpi "
-install_items+=" /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcslpi8280.mbn /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcadsp8280.mbn /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qccdsp8280.mbn /lib/firmware/qcom/sc8280xp/SC8280XP-HUAWEI-GAOKUN3-tplg.bin /lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/audioreach-tplg.bin "
+install_items+=" /usr/lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcslpi8280.mbn /usr/lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qcadsp8280.mbn /usr/lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/qccdsp8280.mbn /usr/lib/firmware/qcom/sc8280xp/HUAWEI/gaokun3/audioreach-tplg.bin "
 EOF
 
 install -d /etc/kernel

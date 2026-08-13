@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Bootstraps an aarch64 Fedora rootfs with dnf --installroot inside a Fedora
-# container, then replaces the stock firmware with the gaokun3 kernel and
-# firmware packages fetched by 10_fetch_package_rpms.sh.
+# container, then adds the gaokun3 kernel and firmware packages fetched by
+# 10_fetch_package_rpms.sh on top of Fedora's own.
 #
 # PACKAGE_SET carries the groups and packages that define the image variant, so
 # the same bootstrap serves the Workstation image and the rescue image.
@@ -96,15 +96,7 @@ if [ "$ENABLE_RPMFUSION" = "true" ]; then
     install libavcodec-freeworld
 fi
 
-# The gaokun3 firmware package owns files the stock packages also ship.
-stock_firmware_packages=()
-rpm --root="$ROOTFS_DIR" -q atheros-firmware >/dev/null 2>&1 && stock_firmware_packages+=(atheros-firmware)
-rpm --root="$ROOTFS_DIR" -q qcom-firmware >/dev/null 2>&1 && stock_firmware_packages+=(qcom-firmware)
-if [ ${#stock_firmware_packages[@]} -gt 0 ]; then
-  rpm --root="$ROOTFS_DIR" -e --nodeps "${stock_firmware_packages[@]}"
-fi
-
-dnf_install --nogpgcheck install --allowerasing $RPM_PATHS
+dnf_install --nogpgcheck install $RPM_PATHS
 CONTAINER_EOF
 
 sudo depmod -b "$ROOTFS_DIR" -a "$KREL"

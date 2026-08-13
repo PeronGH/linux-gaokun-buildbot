@@ -106,11 +106,6 @@ EOF
 # Only ours. gdm, NetworkManager and sshd are all decided by Fedora's presets.
 systemctl enable patch-nvm-bdaddr.service
 
-cat > /etc/dracut.conf.d/matebook.conf <<'MODEOF'
-hostonly="no"
-add_drivers+=" btrfs nvme phy-qcom-qmp-pcie phy-qcom-qmp-combo phy-qcom-qmp-usb phy-qcom-snps-femto-v2 usb-storage uas typec pci-pwrctrl-pwrseq ath11k ath11k_pci i2c-hid-of "
-MODEOF
-
 install -d /etc/kernel
 cat > /etc/kernel/install.conf <<'EOF'
 layout=bls

@@ -150,14 +150,12 @@ cat > /etc/repart.d/50-root.conf <<'EOF'
 Type=linux-generic
 EOF
 
-# hostonly=no because the stick has to boot on a device it was not built on.
-# usb-storage and uas carry the root filesystem, nvme reaches the disk being
-# repaired. systemd-repart runs from the initrd, before the root filesystem is
-# mounted, so growfs sees the grown partition on the same boot; install_items
-# puts the definition above where that early run can find it.
-cat > /etc/dracut.conf.d/matebook.conf <<'MODEOF'
-hostonly="no"
-add_drivers+=" btrfs nvme phy-qcom-qmp-pcie phy-qcom-qmp-combo phy-qcom-qmp-usb phy-qcom-snps-femto-v2 usb-storage uas typec pci-pwrctrl-pwrseq ath11k ath11k_pci i2c-hid-of "
+# On top of the kernel package's fragment, which already carries hostonly=no and
+# the drivers this device boots through. systemd-repart runs from the initrd,
+# before the root filesystem is mounted, so growfs sees the grown partition on
+# the same boot; install_items puts the definition above where that early run
+# can find it.
+cat > /etc/dracut.conf.d/gaokun-rescue.conf <<'MODEOF'
 add_dracutmodules+=" systemd-repart "
 install_items+=" /etc/repart.d/50-root.conf "
 omit_dracutmodules+=" plymouth "
@@ -191,8 +189,7 @@ systemd-machine-id-setup
 
 bootctl --no-variables --esp-path=/boot/efi install
 
-# The remove clears whatever the kernel RPM's %posttrans wrote while the rootfs
-# had no ESP. Both resolve the entry token from /etc/kernel/entry-token above.
+# Both resolve the entry token from /etc/kernel/entry-token above.
 kernel-install remove "$KREL" || true
 kernel-install --verbose --make-entry-directory=yes add \
   "$KREL" "/boot/vmlinuz-$KREL"

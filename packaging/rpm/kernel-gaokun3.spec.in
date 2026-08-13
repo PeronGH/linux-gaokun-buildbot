@@ -27,7 +27,12 @@ cp -a boot %{buildroot}/
 cp -a usr %{buildroot}/
 
 %posttrans
-if [ "$1" -ge 1 ] && command -v kernel-install >/dev/null 2>&1; then
+# bootctl resolves the ESP the same way kernel-install does. During image builds
+# this package is installed into a rootfs that has none, and the entries written
+# there would sit under /boot, where kernel-install would later prefer them over
+# the real ESP.
+if [ "$1" -ge 1 ] && command -v kernel-install >/dev/null 2>&1 &&
+   bootctl --print-esp-path >/dev/null 2>&1; then
     temp_conf_root="$(mktemp -d)"
     cleanup() {
         rm -rf "$temp_conf_root"
