@@ -134,8 +134,12 @@ EOF
 install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
+# The boot is verbose, and plymouth is disabled outright rather than just left
+# without a theme: with no rhgb/splash it still starts and draws its own details
+# view through DRM, which ignores fbcon=rotate:1. Only the kernel's own console
+# comes out upright on this portrait panel.
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
+root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
 EOF
 
 cat > /etc/kernel/devicetree <<'EOF'
@@ -192,11 +196,14 @@ if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
     "$EL2_CMDLINE"
 fi
 
+# The editor is what makes the cmdline escape hatches reachable from the device
+# itself, selinux=0 below among them, instead of needing another machine to
+# mount the ESP.
 cat > /boot/efi/loader/loader.conf <<EOF
 default fedora-${KREL}.conf
 timeout 5
 console-mode keep
-editor no
+editor yes
 EOF
 
 # The rootfs is assembled on a host without SELinux, so rpm could not apply

@@ -357,7 +357,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
 EOF
 
 cat > /etc/kernel/devicetree <<EOF
@@ -388,7 +388,7 @@ if [ -n "$KREL_EL2" ]; then
 layout=bls
 EOF
     cat > $EL2_CONF_ROOT/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 rhgb quiet
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth iommu.passthrough=0 iommu.strict=0 pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
 EOF
     cat > $EL2_CONF_ROOT/devicetree <<EOF
 qcom/sc8280xp-huawei-gaokun3-el2.dtb
@@ -413,7 +413,7 @@ cat > /boot/efi/loader/loader.conf <<EOF
 default fedora-${KREL}.conf
 timeout 5
 console-mode keep
-editor no
+editor yes
 EOF
 
 # Empty it again, so every device generates its own on first boot

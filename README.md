@@ -68,6 +68,7 @@ The image and local-install workflows now follow the standard `kernel-install` +
 - A compatibility copy of the DTB is also kept in `/boot` so users can switch to GRUB more easily later.
 - Fedora DTBs are installed in `/usr/lib/modules/<kernel-release>/dtb/qcom/` for `kernel-install`, plus `/boot/dtb-<kernel-release>/qcom/` as a compatibility copy.
 - The Gaokun3 image scripts provide `/etc/kernel/cmdline` and `/etc/kernel/devicetree`, then call `kernel-install add` to populate the final BLS entry.
+- The boot is verbose and Plymouth is off (`plymouth.enable=0`), where stock Fedora has `rhgb quiet`. Plymouth draws through DRM and ignores `fbcon=rotate:1`, so both its splash and its details view would come out sideways on this portrait panel; the kernel console honours the rotation. `systemd-boot`'s entry editor is enabled (`editor yes`) so the cmdline, `selinux=0` included, can be changed from the device instead of by mounting the ESP elsewhere.
 
 ## Getting started
 

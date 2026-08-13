@@ -68,6 +68,7 @@
 - 在 `/boot` 中还会保留一份 DTB 的兼容副本，方便用户后续切换到 GRUB。
 - Fedora DTB 安装在 `/usr/lib/modules/<kernel-release>/dtb/qcom/` 供 `kernel-install` 使用，另有 `/boot/dtb-<kernel-release>/qcom/` 兼容副本。
 - Gaokun3 镜像脚本提供 `/etc/kernel/cmdline` 和 `/etc/kernel/devicetree`，然后调用 `kernel-install add` 填充最终的 BLS 条目。
+- 启动过程输出完整日志，并关闭 Plymouth（`plymouth.enable=0`），而原版 Fedora 使用 `rhgb quiet`。Plymouth 通过 DRM 绘制，不识别 `fbcon=rotate:1`，因此无论是它的开机画面还是详细输出，在这块竖屏面板上都是横躺的；内核控制台则会遵循该旋转。`systemd-boot` 的条目编辑器保持开启（`editor yes`），这样包括 `selinux=0` 在内的 cmdline 都能在设备上直接修改，无需去别处挂载 ESP。
 
 ## 快速开始
 
