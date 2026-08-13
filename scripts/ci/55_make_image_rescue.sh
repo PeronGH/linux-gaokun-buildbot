@@ -151,6 +151,12 @@ cat > /etc/kernel/install.conf <<'EOF'
 layout=bls
 EOF
 
+# A token of its own: a rescue stick and a target install must never write the
+# same entry name if their ESPs are ever both mounted. Recorded here rather than
+# passed on the command line so that any later kernel-install run, on the device
+# or elsewhere, resolves to the same one.
+printf '%s\n' "$ENTRY_TOKEN" > /etc/kernel/entry-token
+
 install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
@@ -170,11 +176,10 @@ systemd-machine-id-setup
 
 bootctl --no-variables --esp-path=/boot/efi install
 
-# A token of its own: a rescue stick and a target install must never write the
-# same entry name if their ESPs are ever both mounted. The remove clears
-# whatever the kernel RPM's %posttrans wrote while the rootfs had no ESP.
-kernel-install --entry-token="$ENTRY_TOKEN" remove "$KREL" || true
-kernel-install --verbose --make-entry-directory=yes --entry-token="$ENTRY_TOKEN" add \
+# The remove clears whatever the kernel RPM's %posttrans wrote while the rootfs
+# had no ESP. Both resolve the entry token from /etc/kernel/entry-token above.
+kernel-install remove "$KREL" || true
+kernel-install --verbose --make-entry-directory=yes add \
   "$KREL" "/boot/vmlinuz-$KREL"
 
 cat > /boot/efi/loader/loader.conf <<EOF
