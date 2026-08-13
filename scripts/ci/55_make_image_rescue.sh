@@ -62,7 +62,7 @@ done
 # then grows the filesystem into it.
 sudo tee "$MNT/etc/fstab" >/dev/null <<EOF
 UUID=${ROOT_UUID}  /         ext4  defaults,x-systemd.growfs                     0  1
-UUID=${EFI_UUID}   /boot/efi vfat  defaults,nofail,x-systemd.device-timeout=10s  0  2
+UUID=${EFI_UUID}   /boot/efi vfat  umask=0077,shortname=winnt,nofail,x-systemd.device-timeout=10s  0  2
 EOF
 
 sudo mount --bind /dev "$MNT/dev"
@@ -159,6 +159,7 @@ hostonly="no"
 add_drivers+=" btrfs nvme phy-qcom-qmp-pcie phy-qcom-qmp-combo phy-qcom-qmp-usb phy-qcom-snps-femto-v2 usb-storage uas typec pci-pwrctrl-pwrseq ath11k ath11k_pci i2c-hid-of "
 add_dracutmodules+=" systemd-repart "
 install_items+=" /etc/repart.d/50-root.conf "
+omit_dracutmodules+=" plymouth "
 MODEOF
 
 install -d /etc/kernel
@@ -183,7 +184,9 @@ cat > /etc/kernel/devicetree <<'EOF'
 qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
-dracut --force --kver "$KREL"
+# No dracut run here: kernel-install's 50-dracut.install builds the initrd into
+# its own staging area and installs that, so anything made now would be
+# regenerated and thrown away.
 
 # Needed by the tools below, and emptied again at the end.
 rm -f /etc/machine-id
@@ -196,6 +199,11 @@ bootctl --no-variables --esp-path=/boot/efi install
 kernel-install remove "$KREL" || true
 kernel-install --verbose --make-entry-directory=yes add \
   "$KREL" "/boot/vmlinuz-$KREL"
+
+# Nothing boots from /boot: layout=bls puts the kernel and initrd on the ESP.
+# Whatever the kernel package's %posttrans left here was built in a container
+# with no ESP mounted, and would only be a stale copy for someone to find later.
+rm -f /boot/initramfs-*.img
 
 cat > /boot/efi/loader/loader.conf <<EOF
 default ${ENTRY_TOKEN}-${KREL}.conf

@@ -98,7 +98,7 @@ jobs:
             @core @standard ${{ github.event.inputs.desktop_environment }}
             systemd-boot-unsigned alsa-ucm
             policycoreutils selinux-policy-targeted
-            glibc-langpack-en langpacks-en
+            glibc-langpack-en langpacks-en binutils
             google-noto-color-emoji-fonts google-noto-emoji-fonts
             alsa-utils pipewire-utils
           INSTALL_LANGS: all

@@ -56,7 +56,7 @@ jobs:
         ntfs-3g ntfsprogs
         arch-install-scripts policycoreutils selinux-policy-targeted
         curl zstd xz jq tar
-        terminus-fonts-console glibc-langpack-en
+        terminus-fonts-console glibc-langpack-en binutils
         tmux vim-enhanced nano less pciutils usbutils htop ddrescue smartmontools
       # zram-generator-defaults comes with @core and would put a compressed swap
       # device in the way of an environment whose whole job is writing to disks.

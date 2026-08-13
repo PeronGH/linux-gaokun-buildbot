@@ -65,7 +65,7 @@ install_common_image_assets "$MNT" "$GAOKUN_DIR"
 sudo tee "$MNT/etc/fstab" >/dev/null <<EOF
 UUID=${ROOT_UUID}  /         btrfs  subvol=root,compress=zstd:1  0  0
 UUID=${ROOT_UUID}  /home     btrfs  subvol=home,compress=zstd:1  0  0
-UUID=${EFI_UUID}   /boot/efi vfat   defaults,nofail,x-systemd.device-timeout=10s  0  2
+UUID=${EFI_UUID}   /boot/efi vfat   umask=0077,shortname=winnt,nofail,x-systemd.device-timeout=10s  0  2
 EOF
 
 sudo mount --bind /dev "$MNT/dev"
@@ -146,10 +146,9 @@ cat > /etc/kernel/devicetree <<'EOF'
 qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
-dracut --force --kver "$KREL"
-if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
-  dracut --force --kver "$KREL_EL2"
-fi
+# No dracut run here: kernel-install's 50-dracut.install builds the initrd into
+# its own staging area and installs that, so anything made now would be
+# regenerated and thrown away.
 
 # Generated only so the tools below have one to work with. It is emptied again
 # at the end of this script, since a machine-id baked into an image would be
@@ -195,6 +194,11 @@ if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
     "sc8280xp-huawei-gaokun3-el2.dtb" \
     "$EL2_CMDLINE"
 fi
+
+# Nothing boots from /boot: layout=bls puts the kernel and initrd on the ESP.
+# Whatever the kernel package's %posttrans left here was built in a container
+# with no ESP mounted, and would only be a stale copy for someone to find later.
+rm -f /boot/initramfs-*.img
 
 # The editor is what makes the cmdline escape hatches reachable from the device
 # itself, selinux=0 below among them, instead of needing another machine to
