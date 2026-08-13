@@ -1,5 +1,3 @@
-English | [中文](docs/README_zh.md)
-
 # linux-gaokun-buildbot
 
 Build scripts, patches, kernel config, DTS files, tools, and firmware for Linux images targeting the Huawei MateBook E Go 2023 (codename `gaokun3`) based on Qualcomm Snapdragon 8cx Gen3 (`SC8280XP`).
@@ -74,11 +72,11 @@ The image and local-install workflows now follow the standard `kernel-install` +
 ## Getting started
 
 - Release: <https://github.com/KawaiiHachimi/linux-gaokun-build/releases>
-- Rescue USB guide: [English](docs/rescue_usb_guide_en.md) | [中文](docs/rescue_usb_guide_zh.md)
-- Dual-boot guide: [English](docs/dual_boot_guide_en.md) | [中文](docs/dual_boot_guide_zh.md)
-- EL2 implementation notes: [English](docs/el2_kvm_guide_en.md) | [中文](docs/el2_kvm_guide_zh.md)
-- Awesome Gaokun3: [English](docs/awesome_gaokun3_en.md) | [中文](docs/awesome_gaokun3_zh.md)
-- Build guide – Fedora 44: [English](docs/matebook_ego_build_guide_fedora44_en.md) | [中文](docs/matebook_ego_build_guide_fedora44_zh.md)
+- [Rescue USB guide](docs/rescue_usb_guide_en.md)
+- [Dual-boot guide](docs/dual_boot_guide_en.md)
+- [EL2 implementation notes](docs/el2_kvm_guide_en.md)
+- [Awesome Gaokun3](docs/awesome_gaokun3_en.md)
+- [Build guide – Fedora 44](docs/matebook_ego_build_guide_fedora44_en.md)
 
 ### Language and input
 

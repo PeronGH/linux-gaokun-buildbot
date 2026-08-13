@@ -1,5 +1,3 @@
-English | [中文](dual_boot_guide_zh.md)
-
 # Windows + Linux Dual Boot Installation and Boot Configuration (DG + systemd-boot)
 
 This document uses `systemd-boot` as an example to take over the default boot entry, enabling Windows / Linux dual boot selection.

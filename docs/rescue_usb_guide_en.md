@@ -1,5 +1,3 @@
-English | [中文](rescue_usb_guide_zh.md)
-
 # Gaokun3 Rescue USB
 
 A CLI-only Fedora environment that boots the MateBook E Go from a USB stick. It

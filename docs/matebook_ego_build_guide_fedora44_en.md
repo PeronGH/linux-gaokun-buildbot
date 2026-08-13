@@ -1,5 +1,3 @@
-English | [中文](matebook_ego_build_guide_fedora44_zh.md)
-
 # Huawei MateBook E Go 2023 Fedora 44 Manual Build Guide
 
 > **Target Device**: Huawei MateBook E Go 2023 (codename `gaokun3`)  

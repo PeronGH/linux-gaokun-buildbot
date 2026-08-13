@@ -1,5 +1,3 @@
-English | [中文](el2_kvm_guide_zh.md)
-
 # Huawei MateBook E Go 2023 EL2 Implementation Notes
 
 ## 1. Positioning
