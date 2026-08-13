@@ -84,207 +84,28 @@ jobs:
           set -euxo pipefail
           mkdir -p "$WORKDIR" "$ROOTFS_DIR" "$ARTIFACT_DIR"
 
-      - name: Resolve package release tag
+      - name: Fetch gaokun package RPMs
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PACKAGE_RELEASE_TAG: ${{ needs.build-package-rpms.outputs.package_release_tag }}
         run: |
-          set -euxo pipefail
-
-          if [[ "${{ github.event.inputs.rebuild_package_rpms }}" == "true" ]]; then
-            package_release_tag="${{ needs.build-package-rpms.outputs.package_release_tag }}"
-          else
-            safe_kernel_tag="${KERNEL_TAG//\//-}"
-            safe_kernel_tag="${safe_kernel_tag//[^A-Za-z0-9._-]/-}"
-            profile="std"
-            if [[ "$BUILD_EL2" == "true" ]]; then
-              profile="std-el2"
-            fi
-            prefix="gaokun3-rpms-${safe_kernel_tag}-${profile}-"
-
-            releases_json="$WORKDIR/releases.json"
-            curl -fsSL \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
-              -o "$releases_json"
-
-            package_release_tag="$(jq -r --arg prefix "$prefix" '.[] | select(.tag_name | startswith($prefix)) | .tag_name' "$releases_json" | head -n 1)"
-            if [[ -z "$package_release_tag" ]]; then
-              echo "no package release found for prefix ${prefix}" >&2
-              exit 1
-            fi
-          fi
-
-          echo "PACKAGE_RELEASE_TAG=$package_release_tag" >> "$GITHUB_ENV"
-
-      - name: Download gaokun package RPMs
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euxo pipefail
-          mkdir -p "$PACKAGE_RPMS_DIR"
-
-          api_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${PACKAGE_RELEASE_TAG}"
-          release_json="$WORKDIR/package-release.json"
-
-          curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "$api_url" \
-            -o "$release_json"
-
-          asset_name="package-manifest.json"
-          asset_url="$(jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .url' "$release_json")"
-
-          if [[ -z "$asset_url" || "$asset_url" == "null" ]]; then
-            echo "missing asset ${asset_name} in release ${PACKAGE_RELEASE_TAG}" >&2
-            exit 1
-          fi
-
-          curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/octet-stream" \
-            "$asset_url" \
-            -o "$PACKAGE_RPMS_DIR/$asset_name"
-
-          manifest_path="$PACKAGE_RPMS_DIR/package-manifest.json"
-          manifest_kernel_tag="$(jq -r '.kernel_tag' "$manifest_path")"
-          manifest_build_el2="$(jq -r '.build_el2' "$manifest_path")"
-
-          if [[ "$manifest_kernel_tag" != "$KERNEL_TAG" ]]; then
-            echo "package release kernel tag mismatch: expected ${KERNEL_TAG}, got ${manifest_kernel_tag}" >&2
-            exit 1
-          fi
-
-          if [[ "$BUILD_EL2" == "true" && "$manifest_build_el2" != "true" ]]; then
-            echo "package release ${PACKAGE_RELEASE_TAG} does not contain EL2 packages" >&2
-            exit 1
-          fi
-
-          asset_names=(
-            "$(jq -r '.kernels.standard.packages.kernel' "$manifest_path")"
-            "$(jq -r '.kernels.standard.packages.kernel_modules' "$manifest_path")"
-            "$(jq -r '.packages.firmware' "$manifest_path")"
-          )
-
-          if [[ "$BUILD_EL2" == "true" ]]; then
-            asset_names+=(
-              "$(jq -r '.kernels.el2.packages.kernel' "$manifest_path")"
-              "$(jq -r '.kernels.el2.packages.kernel_modules' "$manifest_path")"
-            )
-          fi
-
-          for asset_name in "${asset_names[@]}"; do
-            asset_url="$(jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .url' "$release_json")"
-
-            if [[ -z "$asset_url" || "$asset_url" == "null" ]]; then
-              echo "missing asset ${asset_name} in release ${PACKAGE_RELEASE_TAG}" >&2
-              exit 1
-            fi
-
-            curl -fsSL \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-              -H "Accept: application/octet-stream" \
-              "$asset_url" \
-              -o "$PACKAGE_RPMS_DIR/$asset_name"
-          done
+          chmod +x scripts/ci/10_fetch_package_rpms.sh
+          scripts/ci/10_fetch_package_rpms.sh
 
       - name: Bootstrap Fedora rootfs
+        env:
+          PACKAGE_SET: >-
+            @core @standard ${{ github.event.inputs.desktop_environment }}
+            systemd-boot-unsigned alsa-ucm
+            policycoreutils selinux-policy-targeted
+            glibc-langpack-en langpacks-en
+            google-noto-color-emoji-fonts google-noto-emoji-fonts
+            alsa-utils pipewire-utils
+          INSTALL_LANGS: all
+          ENABLE_RPMFUSION: "true"
         run: |
-          set -euxo pipefail
-          sudo docker run --rm \
-            -v "$GITHUB_WORKSPACE":"$GITHUB_WORKSPACE" \
-            -w "$GITHUB_WORKSPACE" \
-            --user root \
-            "fedora:${FEDORA_RELEASE}" \
-            bash -euxo pipefail -c '
-              echo "%_install_langs all" > /etc/rpm/macros.image-language-conf
-              sed -i "/tsflags=nodocs/d" /etc/dnf/dnf.conf
-
-              mkdir -p "'"$ROOTFS_DIR"'/etc"
-
-              dnf -y --installroot="'"$ROOTFS_DIR"'" --releasever="'"$FEDORA_RELEASE"'" --forcearch=aarch64 --use-host-config \
-                --exclude="'"$EXCLUDED_PACKAGES"'" \
-                install \
-                @core @standard '"$DESKTOP_ENVIRONMENT"' \
-                systemd-boot-unsigned alsa-ucm \
-                policycoreutils selinux-policy-targeted \
-                glibc-langpack-en langpacks-en \
-                google-noto-color-emoji-fonts google-noto-emoji-fonts \
-                alsa-utils pipewire-utils \
-                '"$EXTRA_PACKAGES"'
-
-              dnf -y --installroot="'"$ROOTFS_DIR"'" --releasever="'"$FEDORA_RELEASE"'" --forcearch=aarch64 --use-host-config \
-                install \
-                https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-'"$FEDORA_RELEASE"'.noarch.rpm
-
-              mkdir -p /etc/pki/rpm-gpg
-              cp -a "'"$ROOTFS_DIR"'/etc/pki/rpm-gpg/." /etc/pki/rpm-gpg/
-
-              dnf -y --installroot="'"$ROOTFS_DIR"'" --releasever="'"$FEDORA_RELEASE"'" --forcearch=aarch64 --use-host-config \
-                --setopt=reposdir="'"$ROOTFS_DIR"'/etc/yum.repos.d,/etc/yum.repos.d" \
-                install \
-                libavcodec-freeworld
-            '
-
-      - name: Install gaokun package RPMs into rootfs
-        run: |
-          set -euxo pipefail
-          manifest_path="$PACKAGE_RPMS_DIR/package-manifest.json"
-          manifest_kernel_release="$(jq -r '.kernels.standard.release' "$manifest_path")"
-          kernel_rpm_name="$(jq -r '.kernels.standard.packages.kernel' "$manifest_path")"
-          kernel_modules_rpm_name="$(jq -r '.kernels.standard.packages.kernel_modules' "$manifest_path")"
-          firmware_rpm_name="$(jq -r '.packages.firmware' "$manifest_path")"
-          echo "$manifest_kernel_release" > "$WORKDIR/kernel-release.txt"
-
-          el2_kernel_release=""
-          el2_kernel_rpm_name=""
-          el2_kernel_modules_rpm_name=""
-          if [[ "$BUILD_EL2" == "true" ]]; then
-            el2_kernel_release="$(jq -r '.kernels.el2.release' "$manifest_path")"
-            el2_kernel_rpm_name="$(jq -r '.kernels.el2.packages.kernel' "$manifest_path")"
-            el2_kernel_modules_rpm_name="$(jq -r '.kernels.el2.packages.kernel_modules' "$manifest_path")"
-            echo "$el2_kernel_release" > "$WORKDIR/kernel-release-el2.txt"
-          else
-            rm -f "$WORKDIR/kernel-release-el2.txt"
-          fi
-
-          rpm_install_args=(
-            "\"$PACKAGE_RPMS_DIR/$kernel_rpm_name\""
-            "\"$PACKAGE_RPMS_DIR/$kernel_modules_rpm_name\""
-            "\"$PACKAGE_RPMS_DIR/$firmware_rpm_name\""
-          )
-          if [[ "$BUILD_EL2" == "true" ]]; then
-            rpm_install_args+=(
-              "\"$PACKAGE_RPMS_DIR/$el2_kernel_rpm_name\""
-              "\"$PACKAGE_RPMS_DIR/$el2_kernel_modules_rpm_name\""
-            )
-          fi
-          rpm_install_args_string="$(printf '%s ' "${rpm_install_args[@]}")"
-
-          sudo docker run --rm \
-            -v "$(dirname "$ROOTFS_DIR")":"$(dirname "$ROOTFS_DIR")" \
-            -v "$PACKAGE_RPMS_DIR":"$PACKAGE_RPMS_DIR" \
-            -w / \
-            --user root \
-            "fedora:${FEDORA_RELEASE}" \
-            bash -euxo pipefail -c '
-              stock_firmware_packages=()
-              rpm --root="'"$ROOTFS_DIR"'" -q atheros-firmware >/dev/null 2>&1 && stock_firmware_packages+=(atheros-firmware)
-              rpm --root="'"$ROOTFS_DIR"'" -q qcom-firmware >/dev/null 2>&1 && stock_firmware_packages+=(qcom-firmware)
-              if (( ${#stock_firmware_packages[@]} )); then
-                rpm --root="'"$ROOTFS_DIR"'" -e --nodeps "${stock_firmware_packages[@]}"
-              fi
-
-              dnf -y --installroot="'"$ROOTFS_DIR"'" --releasever="'"$FEDORA_RELEASE"'" --use-host-config --nogpgcheck \
-                install --allowerasing \
-                '"$rpm_install_args_string"'
-            '
-
-          sudo depmod -b "$ROOTFS_DIR" -a "$manifest_kernel_release"
-          if [[ "$BUILD_EL2" == "true" ]]; then
-            sudo depmod -b "$ROOTFS_DIR" -a "$el2_kernel_release"
-          fi
+          chmod +x scripts/ci/30_bootstrap_rootfs.sh
+          scripts/ci/30_bootstrap_rootfs.sh
 
       - name: Create disk image and configure boot
         run: |
@@ -300,11 +121,13 @@ jobs:
           KREL="$(cat "$WORKDIR/kernel-release-export.txt")"
           PACKAGE_GLOB="$(cat "$WORKDIR/package-glob.txt")"
           RELEASE_BODY_FILE="$(cat "$WORKDIR/release-body-file.txt")"
-          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
-          echo "artifact_dir=$ARTIFACT_DIR" >> "$GITHUB_OUTPUT"
-          echo "kernel_release=$KREL" >> "$GITHUB_OUTPUT"
-          echo "package_glob=$PACKAGE_GLOB" >> "$GITHUB_OUTPUT"
-          echo "release_body_file=$RELEASE_BODY_FILE" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag_name=$TAG_NAME"
+            echo "artifact_dir=$ARTIFACT_DIR"
+            echo "kernel_release=$KREL"
+            echo "package_glob=$PACKAGE_GLOB"
+            echo "release_body_file=$RELEASE_BODY_FILE"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.6.1
