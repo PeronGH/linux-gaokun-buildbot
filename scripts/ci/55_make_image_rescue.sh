@@ -96,6 +96,22 @@ EOF
 useradd --create-home --groups wheel --comment "Rescue user" fedora
 echo 'fedora:fedora' | chpasswd
 
+# Every repair here is a root operation, and the password is public anyway, so a
+# prompt would only be something to type.
+cat > /etc/sudoers.d/10-gaokun-rescue <<'EOF'
+fedora ALL=(ALL) NOPASSWD: ALL
+EOF
+chmod 440 /etc/sudoers.d/10-gaokun-rescue
+
+# The console comes up logged in: this is a rescue disk, not a system with
+# anything to protect on it.
+install -d /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/10-autologin.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin fedora --noclear %I $TERM
+EOF
+
 # sshd takes the first value it obtains for a keyword, so this sorts ahead of
 # Fedora's own 50-redhat.conf.
 cat > /etc/ssh/sshd_config.d/10-gaokun-rescue.conf <<'EOF'
@@ -110,8 +126,7 @@ systemctl enable sshd.service NetworkManager.service
 cat > /etc/issue <<EOF
 Gaokun3 rescue environment - Fedora ${FEDORA_RELEASE} - \l
 
-  login: fedora    password: fedora
-  address: \4
+  ssh fedora@\4    password: fedora
 
 EOF
 

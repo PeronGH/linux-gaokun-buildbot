@@ -13,7 +13,8 @@
 **该镜像使用公开的密码，并且默认启用 `sshd`。** 只要它在运行并接入了网络，同一网络
 上的任何人都可以用 `fedora` 登录。
 
-- 用户 `fedora`，密码 `fedora`，通过 `wheel` 组使用 `sudo`
+- 控制台会自动以 `fedora` 登录，`sudo` 不需要密码
+- SSH 登录：用户 `fedora`，密码 `fedora`
 - 禁止 root 通过 SSH 登录
 - SSH 主机密钥在首次启动时按 U 盘生成，不会被打包进镜像
 
@@ -34,7 +35,7 @@ sudo dd if=gaokun3-rescue.img of=/dev/sdX bs=4M status=progress conv=fsync
 1. 开机按 F2，把 Secure Boot 设为 Disable，保存并重启。
 2. 从 U 盘启动。U 盘走的是可移动设备路径（`\EFI\BOOT\BOOTAA64.EFI`），完全不会改动
    内置硬盘上的引导配置。
-3. 控制台已经旋转为正向并使用大号字体。用 `fedora` 登录。
+3. 控制台已经旋转为正向、使用大号字体，并且已经以 `fedora` 登录。
 
 如果想通过 SSH 操作而不是使用控制台：
 

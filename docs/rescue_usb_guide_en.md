@@ -14,7 +14,8 @@ or to repair an installation that no longer boots.
 **This image has a published password and `sshd` enabled.** While it is running
 and joined to a network, anyone on that network can log in as `fedora`.
 
-- User `fedora`, password `fedora`, `sudo` through `wheel`
+- The console logs in as `fedora` automatically, and `sudo` asks for nothing
+- Over SSH: user `fedora`, password `fedora`
 - Root login over SSH is disabled
 - SSH host keys are generated per stick on first boot, not baked into the image
 
@@ -37,7 +38,8 @@ stick itself.
 2. Boot the USB stick. The stick boots through the removable path
    (`\EFI\BOOT\BOOTAA64.EFI`), so it does not touch the internal disk's boot
    configuration in any way.
-3. The console is rotated upright and uses a large font. Log in as `fedora`.
+3. The console is rotated upright, uses a large font, and is already logged in
+   as `fedora`.
 
 To work over SSH instead of through the console:
 

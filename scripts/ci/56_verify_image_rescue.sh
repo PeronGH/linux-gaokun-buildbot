@@ -62,6 +62,13 @@ for key in linux initrd devicetree; do
   sudo test -f "$MNT/boot/efi/$target" || fail "boot entry $key points at missing $target"
 done
 
+# The only silent one of the three: autologin and passwordless sudo announce
+# themselves on the first boot, a zram swap device does not.
+sudo test ! -e "$MNT/usr/lib/systemd/zram-generator.conf" || fail "zram is configured"
+sudo test -f "$MNT/etc/sudoers.d/10-gaokun-rescue" || fail "no passwordless sudo"
+sudo test -f "$MNT/etc/systemd/system/getty@tty1.service.d/10-autologin.conf" \
+  || fail "no console autologin"
+
 sudo test ! -s "$MNT/etc/machine-id" || fail "machine-id is not empty"
 sudo grep -qE '^UUID=\S+\s+/\s+ext4\s+\S*x-systemd\.growfs' "$MNT/etc/fstab" \
   || fail "root fstab entry does not request growfs"

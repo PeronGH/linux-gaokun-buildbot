@@ -58,7 +58,9 @@ jobs:
         curl zstd xz jq tar
         terminus-fonts-console glibc-langpack-en
         tmux vim-enhanced nano less pciutils usbutils htop ddrescue smartmontools
-      EXCLUDED_PACKAGES: "linux-firmware,glibc-all-langpacks"
+      # zram-generator-defaults comes with @core and would put a compressed swap
+      # device in the way of an environment whose whole job is writing to disks.
+      EXCLUDED_PACKAGES: "linux-firmware,glibc-all-langpacks,zram-generator-defaults"
       INSTALL_LANGS: en
       ENABLE_RPMFUSION: "false"
       # Unwritten space is zeroes and costs almost nothing once compressed, so

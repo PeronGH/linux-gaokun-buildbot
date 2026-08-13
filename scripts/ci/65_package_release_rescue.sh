@@ -29,7 +29,8 @@ the procedure is in \`docs/rescue_usb_guide_en.md\`.
 running and joined to a network, anyone on that network can log in as
 \`fedora\`. Do not leave a rescue boot unattended on a network you do not trust.
 
-- User: \`fedora\`, password: \`fedora\`, \`sudo\` via \`wheel\`
+- The console logs in as \`fedora\` automatically, and \`sudo\` asks for nothing
+- Over SSH: user \`fedora\`, password \`fedora\`
 - Root login is disabled; SSH host keys are generated per stick on first boot
 
 ## Build Information
