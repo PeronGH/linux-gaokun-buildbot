@@ -408,8 +408,8 @@ Notes:
 - Instead of manually maintaining `loader/entries/*.conf` and `gaokun3/fedora/...` directories, we let `kernel-install` generate the standard BLS Type #1 layout.
 - We pass `--entry-token=os-id`, so entry names become `/boot/efi/loader/entries/fedora-<kernel-release>.conf`. The machine-id token cannot be used here: the image ships `/etc/machine-id` as `uninitialized` so each device generates its own on first boot, which would leave entries named after a build-time id orphaned.
 - Fedora 44's `90-loaderentry.install` looks for device tree from `/usr/lib/modules/<kernel-release>/dtb/`, so DTB must be placed in this standard path.
-- No `dracut` is run by hand: `kernel-install` calls `50-dracut.install`, which builds the initrd into its own staging area and installs that, so an image built beforehand is only thrown away.
-- `/etc/machine-id` is set to `uninitialized` rather than emptied, which is what Fedora's image builder writes. systemd treats a missing or `uninitialized` file as a first boot and generates a per-device id; an existing empty file gets an id too, but the boot is not a first boot. `systemd-firstboot` above answers the locale, keymap and timezone questions that first boot would otherwise ask on tty1.
+- No `dracut` is run by hand: `kernel-install` builds the initrd itself and installs it beside the entry.
+- `/etc/machine-id` is set to `uninitialized`, as Fedora's own images are, so the device generates its own id on its first boot. `systemd-firstboot` above answers the locale, keymap and timezone questions that first boot would otherwise ask on the console.
 - Fedora's default `51-dracut-rescue.install` generates an additional `0-rescue` boot entry, but this rescue entry doesn't include `devicetree` by default and is unusable on gaokun3, so it's explicitly disabled here.
 
 ### Touchscreen Driver Acknowledgments

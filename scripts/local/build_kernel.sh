@@ -228,9 +228,6 @@ build_kernel() {
     printf '%s\n' "$cmdline" >"$conf_root/cmdline"
     printf 'qcom/%s\n' "$dtb_name" >"$conf_root/devicetree"
 
-    # No dracut run here: kernel-install's 50-dracut.install builds the initrd
-    # into its own staging area and installs that, so anything made now would be
-    # regenerated and thrown away.
     echo "kernel-install inputs:"
     echo "  kernel release: $krel"
     echo "  kernel image:   /boot/vmlinuz-$krel"

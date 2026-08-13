@@ -87,9 +87,8 @@ KEYMAP=us
 FONT=ter-v32b
 EOF
 
-# What is left of the questions systemd-firstboot would otherwise ask on tty1,
-# before the autologin below, once the machine-id at the end of this script
-# marks the image as not yet booted.
+# The rest of what would otherwise be asked on tty1, before the autologin below,
+# on the first boot.
 systemd-firstboot --locale=en_US.UTF-8 --timezone=UTC
 
 # A published password on a downloadable image: anyone on the same network can
@@ -186,10 +185,6 @@ cat > /etc/kernel/devicetree <<'EOF'
 qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
-# No dracut run here: kernel-install's 50-dracut.install builds the initrd into
-# its own staging area and installs that, so anything made now would be
-# regenerated and thrown away.
-
 # Needed by the tools below, and reset again at the end.
 rm -f /etc/machine-id
 systemd-machine-id-setup
@@ -231,8 +226,7 @@ rm -f /boot/efi/loader/random-seed \
   /var/lib/systemd/credential.secret
 
 # Last, so every stick generates its own on first boot. "uninitialized" rather
-# than an empty file: systemd only treats a boot as the first one for the
-# former, which is also what Fedora's own image builder writes.
+# than empty: only that also makes it a first boot.
 printf 'uninitialized\n' > /etc/machine-id
 CHROOT_EOF
 

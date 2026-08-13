@@ -52,11 +52,8 @@ if [ "$1" -ge 1 ] && command -v kernel-install >/dev/null 2>&1; then
            /boot/efi/*/0-rescue \
            /boot/efi/loader/entries/*-0-rescue.conf
 
-    # No dracut run here: kernel-install's 50-dracut.install builds the initrd
-    # into its own staging area and installs that. It only reuses an existing
-    # image if one is named "initrd" next to the kernel, which dracut's own
-    # /boot/initramfs-<kver>.img is not, so building one first is work thrown
-    # away on every install.
+    # No dracut run here: kernel-install builds the initrd itself, and anything
+    # made beforehand is rebuilt rather than reused.
     kernel-install --entry-token=os-id remove @KREL@ || :
     KERNEL_INSTALL_CONF_ROOT="$temp_conf_root" \
         kernel-install --make-entry-directory=yes --entry-token=os-id add \

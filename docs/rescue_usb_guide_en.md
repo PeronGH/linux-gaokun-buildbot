@@ -151,7 +151,7 @@ sudo arch-chroot /mnt/target
 
 From there, the usual repairs are the target's own commands:
 
-- Rebuild the initramfs and boot entry: `kernel-install --entry-token=os-id add ...` as above. `kernel-install` builds the initrd itself and puts it on the ESP next to the entry, which is the copy that boots; a bare `dracut --force` writes `/boot/initramfs-<kernel-release>.img`, which nothing reads.
+- Rebuild the initramfs and boot entry: `kernel-install --entry-token=os-id add ...` as above. This is also how the initramfs is rebuilt — a bare `dracut --force` writes to `/boot`, which this system does not boot from.
 - Reinstall the boot loader: `bootctl --no-variables --esp-path=/boot/efi install`
 - Reset a password: `passwd <user>`
 - Relabel after an SELinux mishap: `fixfiles -F onboot`

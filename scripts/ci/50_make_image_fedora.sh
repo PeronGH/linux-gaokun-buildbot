@@ -93,13 +93,8 @@ EOF
 cat >> /etc/dnf/dnf.conf <<'EOF'
 excludepkgs=kernel,kernel-core,kernel-modules,kernel-modules-core
 EOF
-# Locale, keymap and timezone are properties of whoever ends up using the
-# device, not of the device, so do not presume any. These are Fedora's own image
-# defaults, set the way Fedora's kiwi builder sets them, and are only here
-# because something has to answer until the user picks in Settings; the language
-# packs for other locales are installed and ready to switch to. Leaving any of
-# them unset would instead make systemd-firstboot ask for it on tty1, before
-# gdm, once the machine-id below marks this image as not yet booted.
+# Fedora's own image defaults, held until the user picks in Settings. Anything
+# left unset here is asked for on tty1, before gdm, on the first boot.
 systemd-firstboot --locale=en_US.UTF-8 --keymap=us --timezone=UTC
 
 mkdir -p /var/lib/AccountsService/users
@@ -147,13 +142,9 @@ cat > /etc/kernel/devicetree <<'EOF'
 qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
-# No dracut run here: kernel-install's 50-dracut.install builds the initrd into
-# its own staging area and installs that, so anything made now would be
-# regenerated and thrown away.
-
-# Generated only so the tools below have one to work with. It is emptied again
-# at the end of this script, since a machine-id baked into an image would be
-# shared by every device flashed from it.
+# Generated only so the tools below have one to work with. It is reset again at
+# the end of this script, since a machine-id baked into an image would be shared
+# by every device flashed from it.
 rm -f /etc/machine-id
 systemd-machine-id-setup
 
@@ -225,10 +216,9 @@ rm -f /boot/efi/loader/random-seed \
   /var/lib/systemd/random-seed \
   /var/lib/systemd/credential.secret
 
-# Last step, after everything that needed a machine-id has run. A populated one
-# would be cloned to every device. "uninitialized" is what Fedora's own image
-# builder writes: systemd generates a per-device id on first boot and treats
-# that boot as the first one, which an empty file explicitly does not do.
+# Last step, after everything that needed a machine-id has run. "uninitialized"
+# rather than empty: only that makes systemd generate a per-device id and treat
+# the boot as the first one.
 printf 'uninitialized\n' > /etc/machine-id
 CHROOT_EOF
 
