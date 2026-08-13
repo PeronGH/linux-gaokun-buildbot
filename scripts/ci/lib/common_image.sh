@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Module autoloading and dependency ordering for the device. The "rescue"
 # profile drops audio and bluetooth, which a CLI rescue environment has no use
-# for, and keeps the EC/battery, panel and Wi-Fi modules.
+# for, and keeps the panel and Wi-Fi modules. The EC, battery and UCSI drivers
+# need no entry of their own: they are built into the kernel.
 install_module_config() {
   local rootfs_dir="$1"
   local gaokun_dir="$2"
@@ -19,7 +20,7 @@ install_module_config() {
         "$rootfs_dir/etc/modprobe.d/"
       ;;
     rescue)
-      for conf in battery display wifi; do
+      for conf in display wifi; do
         sudo install -Dm644 \
           "$gaokun_dir/tools/image-assets/etc/modules-load.d/$conf.conf" \
           "$rootfs_dir/etc/modules-load.d/$conf.conf"

@@ -93,13 +93,14 @@ EOF
 cat >> /etc/dnf/dnf.conf <<'EOF'
 excludepkgs=kernel,kernel-core,kernel-modules,kernel-modules-core
 EOF
-# A language is a property of whoever ends up using the device, not of the
-# device, so do not presume one. en_US.UTF-8 is Fedora's own fallback and is
-# only here because something has to be set until the user picks in Settings;
-# the language packs for other locales are installed and ready to switch to.
-cat > /etc/locale.conf <<'EOF'
-LANG=en_US.UTF-8
-EOF
+# Locale, keymap and timezone are properties of whoever ends up using the
+# device, not of the device, so do not presume any. These are Fedora's own image
+# defaults, set the way Fedora's kiwi builder sets them, and are only here
+# because something has to answer until the user picks in Settings; the language
+# packs for other locales are installed and ready to switch to. Leaving any of
+# them unset would instead make systemd-firstboot ask for it on tty1, before
+# gdm, once the machine-id below marks this image as not yet booted.
+systemd-firstboot --locale=en_US.UTF-8 --keymap=us --timezone=UTC
 
 mkdir -p /var/lib/AccountsService/users
 cat > /var/lib/AccountsService/users/gdm <<'EOF'
@@ -139,7 +140,7 @@ ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 # view through DRM, which ignores fbcon=rotate:1. Only the kernel's own console
 # comes out upright on this portrait panel.
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
+root=UUID=$ROOT_UUID rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 plymouth.enable=0
 EOF
 
 cat > /etc/kernel/devicetree <<'EOF'
@@ -195,11 +196,6 @@ if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then
     "$EL2_CMDLINE"
 fi
 
-# Nothing boots from /boot: layout=bls puts the kernel and initrd on the ESP.
-# Whatever the kernel package's %posttrans left here was built in a container
-# with no ESP mounted, and would only be a stale copy for someone to find later.
-rm -f /boot/initramfs-*.img
-
 # The editor is what makes the cmdline escape hatches reachable from the device
 # itself, selinux=0 below among them, instead of needing another machine to
 # mount the ESP.
@@ -229,10 +225,11 @@ rm -f /boot/efi/loader/random-seed \
   /var/lib/systemd/random-seed \
   /var/lib/systemd/credential.secret
 
-# Last step, after everything that needed a machine-id has run. An empty file
-# makes systemd generate a per-device id on first boot and makes
-# ConditionFirstBoot fire; a populated one would be cloned to every device.
-: > /etc/machine-id
+# Last step, after everything that needed a machine-id has run. A populated one
+# would be cloned to every device. "uninitialized" is what Fedora's own image
+# builder writes: systemd generates a per-device id on first boot and treats
+# that boot as the first one, which an empty file explicitly does not do.
+printf 'uninitialized\n' > /etc/machine-id
 CHROOT_EOF
 
 if [[ "$BUILD_EL2" == "true" && -n "$KREL_EL2" ]]; then

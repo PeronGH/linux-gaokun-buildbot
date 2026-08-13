@@ -27,7 +27,7 @@ cp -a boot %{buildroot}/
 cp -a usr %{buildroot}/
 
 %posttrans
-if [ "$1" -ge 1 ] && command -v dracut >/dev/null 2>&1 && command -v kernel-install >/dev/null 2>&1; then
+if [ "$1" -ge 1 ] && command -v kernel-install >/dev/null 2>&1; then
     temp_conf_root="$(mktemp -d)"
     cleanup() {
         rm -rf "$temp_conf_root"
@@ -52,8 +52,11 @@ if [ "$1" -ge 1 ] && command -v dracut >/dev/null 2>&1 && command -v kernel-inst
            /boot/efi/*/0-rescue \
            /boot/efi/loader/entries/*-0-rescue.conf
 
-    dracut --force --kver @KREL@ ||
-        echo "warning: dracut failed for @KREL@, its initramfs is missing or stale" >&2
+    # No dracut run here: kernel-install's 50-dracut.install builds the initrd
+    # into its own staging area and installs that. It only reuses an existing
+    # image if one is named "initrd" next to the kernel, which dracut's own
+    # /boot/initramfs-<kver>.img is not, so building one first is work thrown
+    # away on every install.
     kernel-install --entry-token=os-id remove @KREL@ || :
     KERNEL_INSTALL_CONF_ROOT="$temp_conf_root" \
         kernel-install --make-entry-directory=yes --entry-token=os-id add \

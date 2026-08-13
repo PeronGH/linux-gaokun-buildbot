@@ -146,9 +146,7 @@ sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-hos
     i2c-tools alsa-utils pipewire-utils
 
 sudo mkdir -p $ROOTFS_DIR/etc
-sudo tee $ROOTFS_DIR/etc/locale.conf > /dev/null <<EOF
-LANG=en_US.UTF-8
-EOF
+sudo systemd-firstboot --root=$ROOTFS_DIR --locale=en_US.UTF-8 --keymap=us --timezone=UTC
 
 # Second step: install desktop environment and applications, which reliably pulls the matching translation subpackages into rootfs
 sudo dnf --installroot=$ROOTFS_DIR --releasever=44 --forcearch=aarch64 --use-host-config -y \
@@ -345,7 +343,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 plymouth.enable=0
 EOF
 
 cat > /etc/kernel/devicetree <<EOF
@@ -353,11 +351,6 @@ qcom/sc8280xp-huawei-gaokun3.dtb
 EOF
 
 systemctl enable patch-nvm-bdaddr.service
-
-dracut --force --kver $KREL
-if [ -n "$KREL_EL2" ]; then
-    dracut --force --kver $KREL_EL2
-fi
 
 rm -f /etc/machine-id
 systemd-machine-id-setup
@@ -376,7 +369,7 @@ if [ -n "$KREL_EL2" ]; then
 layout=bls
 EOF
     cat > $EL2_CONF_ROOT/cmdline <<EOF
-root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 psi=1 plymouth.enable=0
+root=UUID=${ROOT_UUID} rootflags=subvol=root clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave modprobe.blacklist=simpledrm efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 plymouth.enable=0
 EOF
     cat > $EL2_CONF_ROOT/devicetree <<EOF
 qcom/sc8280xp-huawei-gaokun3-el2.dtb
@@ -404,8 +397,8 @@ console-mode keep
 editor yes
 EOF
 
-# Empty it again, so every device generates its own on first boot
-: > /etc/machine-id
+# Reset it, so every device generates its own on first boot
+printf 'uninitialized\n' > /etc/machine-id
 
 exit
 ```
@@ -413,8 +406,10 @@ exit
 Notes:
 
 - Instead of manually maintaining `loader/entries/*.conf` and `gaokun3/fedora/...` directories, we let `kernel-install` generate the standard BLS Type #1 layout.
-- We pass `--entry-token=os-id`, so entry names become `/boot/efi/loader/entries/fedora-<kernel-release>.conf`. The machine-id token cannot be used here: the image ships an empty `/etc/machine-id` so each device generates its own on first boot, which would leave entries named after a build-time id orphaned.
+- We pass `--entry-token=os-id`, so entry names become `/boot/efi/loader/entries/fedora-<kernel-release>.conf`. The machine-id token cannot be used here: the image ships `/etc/machine-id` as `uninitialized` so each device generates its own on first boot, which would leave entries named after a build-time id orphaned.
 - Fedora 44's `90-loaderentry.install` looks for device tree from `/usr/lib/modules/<kernel-release>/dtb/`, so DTB must be placed in this standard path.
+- No `dracut` is run by hand: `kernel-install` calls `50-dracut.install`, which builds the initrd into its own staging area and installs that, so an image built beforehand is only thrown away.
+- `/etc/machine-id` is set to `uninitialized` rather than emptied, which is what Fedora's image builder writes. systemd treats a missing or `uninitialized` file as a first boot and generates a per-device id; an existing empty file gets an id too, but the boot is not a first boot. `systemd-firstboot` above answers the locale, keymap and timezone questions that first boot would otherwise ask on tty1.
 - Fedora's default `51-dracut-rescue.install` generates an additional `0-rescue` boot entry, but this rescue entry doesn't include `devicetree` by default and is unusable on gaokun3, so it's explicitly disabled here.
 
 ### Touchscreen Driver Acknowledgments

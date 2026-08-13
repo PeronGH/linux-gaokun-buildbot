@@ -79,16 +79,18 @@ sudo chroot "$MNT" /usr/bin/env \
   /bin/bash -euxo pipefail <<'CHROOT_EOF'
 echo "gaokun-rescue" > /etc/hostname
 
-cat > /etc/locale.conf <<'EOF'
-LANG=en_US.UTF-8
-EOF
-
 # The panel is 2560x1600 and the console is rotated into portrait, where the
-# default 8x16 font is unreadable. This console is the whole interface.
+# default 8x16 font is unreadable. This console is the whole interface, and
+# systemd-firstboot has no way to set a font, so the keymap is set here too.
 cat > /etc/vconsole.conf <<'EOF'
 KEYMAP=us
 FONT=ter-v32b
 EOF
+
+# What is left of the questions systemd-firstboot would otherwise ask on tty1,
+# before the autologin below, once the machine-id at the end of this script
+# marks the image as not yet booted.
+systemd-firstboot --locale=en_US.UTF-8 --timezone=UTC
 
 # A published password on a downloadable image: anyone on the same network can
 # reach this machine while it is running. That is the trade for being able to
@@ -177,7 +179,7 @@ install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
 cat > /etc/kernel/cmdline <<EOF
-root=UUID=$ROOT_UUID rootwait clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 consoleblank=0 plymouth.enable=0
+root=UUID=$ROOT_UUID rootwait clk_ignore_unused pd_ignore_unused arm64.nopauth pcie_aspm.policy=powersupersave efi=noruntime fbcon=rotate:1 usbhid.quirks=0x12d1:0x10b8:0x20000000 plymouth.enable=0
 EOF
 
 cat > /etc/kernel/devicetree <<'EOF'
@@ -188,7 +190,7 @@ EOF
 # its own staging area and installs that, so anything made now would be
 # regenerated and thrown away.
 
-# Needed by the tools below, and emptied again at the end.
+# Needed by the tools below, and reset again at the end.
 rm -f /etc/machine-id
 systemd-machine-id-setup
 
@@ -199,11 +201,6 @@ bootctl --no-variables --esp-path=/boot/efi install
 kernel-install remove "$KREL" || true
 kernel-install --verbose --make-entry-directory=yes add \
   "$KREL" "/boot/vmlinuz-$KREL"
-
-# Nothing boots from /boot: layout=bls puts the kernel and initrd on the ESP.
-# Whatever the kernel package's %posttrans left here was built in a container
-# with no ESP mounted, and would only be a stale copy for someone to find later.
-rm -f /boot/initramfs-*.img
 
 cat > /boot/efi/loader/loader.conf <<EOF
 default ${ENTRY_TOKEN}-${KREL}.conf
@@ -233,8 +230,10 @@ rm -f /boot/efi/loader/random-seed \
   /var/lib/systemd/random-seed \
   /var/lib/systemd/credential.secret
 
-# Last, so every stick generates its own on first boot.
-: > /etc/machine-id
+# Last, so every stick generates its own on first boot. "uninitialized" rather
+# than an empty file: systemd only treats a boot as the first one for the
+# former, which is also what Fedora's own image builder writes.
+printf 'uninitialized\n' > /etc/machine-id
 CHROOT_EOF
 
 sync
