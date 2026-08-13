@@ -6,11 +6,11 @@ The image boots through `systemd-boot`, and a second EL2 kernel variant (`CONFIG
 
 ## Goals
 
-These are ordered. When they conflict, the earlier one wins.
+Ordered — when they conflict, the earlier one wins.
 
-1. **The best experience on the MateBook E Go.** Hardware enablement comes before everything else. The DTS, the kernel config, the firmware bundle, and cmdline entries such as `fbcon=rotate:1` and `usbhid.quirks` exist because this device needs them, and they stay even where they are unlike stock Fedora. RPM Fusion and `libavcodec-freeworld` ship enabled for the same reason: media playback should work out of the box.
-2. **A stock Fedora experience.** The reference is Fedora's own aarch64 Workstation raw disk image, `Fedora-Workstation-Disk-*.aarch64.raw.xz` under [`releases/<release>/Workstation/aarch64/images/`](https://download.fedoraproject.org/pub/fedora/linux/releases/), for whichever release is being built. [Fedora's Workstation documentation](https://docs.fedoraproject.org/en-US/workstation-docs/) counts as reference too: anything Fedora documents for aarch64 Workstation applies here. Where the hardware does not force our hand, match it rather than invent: Fedora's Btrfs layout (`root` and `home` subvolumes, `compress=zstd:1`), SELinux enforcing, no passwordless `sudo`. It also decides what we leave out — if that image does not ship a Pinyin input method or a language's translations, neither do we. Deviations should be deliberate, and worth writing down.
-3. **Safe to daily drive.** It should not be easier to break than an x86 Fedora install: `kernel-gaokun3` is protected from removal, Fedora's own kernels are excluded because they cannot boot this device, and installing a kernel makes it the one that boots. This ranks last on purpose, so guard rails Fedora itself does not have are not added. `dnf system-upgrade` is left alone even though it is a real risk here.
+1. **The best experience on the MateBook E Go.** Hardware enablement comes first, even where it is unlike stock Fedora.
+2. **A stock Fedora experience.** Everything the hardware does not force is Fedora's aarch64 Workstation image as it ships: its disk layout, SELinux enforcing, its package set, its defaults.
+3. **Safe to daily drive.** No easier to break than an x86 Fedora install, and no guard rails Fedora itself does not have.
 
 ## What is included
 

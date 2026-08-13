@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `README.md` and `docs/*.md` are written for someone who owns a MateBook E Go and wants to flash, boot, dual-boot or repair it. Keep them to what such a person acts on. Build-system rationale, upstream evidence and rejected alternatives belong here instead, and inline comments stay to a line or two of local "why". If a comment or doc paragraph explains a distribution-policy decision, move it into this file rather than growing the source.
 
+## Project goals, in order
+
+When these conflict, the earlier one wins.
+
+1. **The best experience on the MateBook E Go.** Hardware enablement comes before everything else. The DTS, kernel config, firmware bundle and quirks like `fbcon=rotate:1` stay even where they are unlike stock Fedora. RPM Fusion and `libavcodec-freeworld` ship enabled for the same reason.
+2. **A stock Fedora experience.** The reference is Fedora's own aarch64 Workstation raw disk image for the release being built, plus anything [Fedora documents](https://docs.fedoraproject.org/en-US/workstation-docs/) for aarch64 Workstation. Where the hardware does not force our hand, match it rather than invent — the Btrfs layout, SELinux enforcing, no passwordless sudo. It also decides what to leave out: if that image ships no Pinyin input method or a language's translations, neither do we. Deviations must be deliberate and written down.
+3. **Safe to daily drive.** No harder to break than an x86 Fedora install: `kernel-gaokun3` is protected from removal, Fedora's kernels are excluded because they cannot boot this device, and installing a kernel makes it the one that boots. Last on purpose — do not add guard rails Fedora itself does not have. `dnf system-upgrade` is left alone even though it is a real risk here.
+
+Goal 2 has a corollary that keeps being got wrong: when Fedora already makes a decision, *inherit* it, do not restate it. An explicit `systemctl enable`/`disable` for a service Fedora presets already handle is dead weight at best and a silent deviation when Fedora changes its mind.
+
 ## What gets built
 
 Three GitHub Actions workflows, all `workflow_dispatch`, all sharing the numbered scripts in `scripts/ci/`:
@@ -29,7 +39,26 @@ bash -n <script>
 
 `.shellcheckrc` sets `external-sources`/`source-path=SCRIPTDIR` so sourced libs resolve. There is no test suite; the real check is a CI run plus a boot on the device, which only the user can do. Privileged commands are handed to the user rather than run here.
 
+### Answering "what does Fedora do?"
+
+Keep one long-lived container and `docker exec` into it. `dnf` metadata is ~100 MB, so `docker run --rm` per question re-downloads it every time:
+
+```sh
+docker run -d --name fedora44 fedora:44 sleep infinity
+docker exec fedora44 dnf -q makecache
+docker exec fedora44 dnf -q repoquery --whatprovides /usr/lib/systemd/system-preset/81-desktop.preset
+docker exec fedora44 dnf --installroot=/rootfs --releasever=44 --use-host-config --assumeno install @core ...
+```
+
+`--assumeno` prints the resolved transaction and aborts, which answers "does package X actually land in our image?" in one command. To read a package's files, `dnf download --destdir` then `rpm2cpio | cpio -idmu` (install `cpio` first). Reach for this before reading dist-git or scraping mirror indexes: it reflects the real repos at the release being built, and dist-git `rawhide` is a different Fedora than the one this image ships.
+
 RPM specs are `packaging/rpm/*.spec.in` templates with `@PLACEHOLDER@` tokens substituted by `render_spec_template` in `70_build_package_rpms.sh`; `rpmspec`/`rpmlint` cannot parse them directly.
+
+## Easy things to get wrong
+
+- **The image is not built from Fedora's Workstation disk image.** `30_bootstrap_rootfs.sh` runs `dnf --installroot` inside a `fedora:<release>` container and installs comps groups (`@core @standard @gnome-desktop @workstation-product` plus the workflow's extras). "Stock Workstation" is therefore an outcome to check, not a starting point — a package the real Workstation image gets through the installer or through a weak dependency may simply be absent here. Check with a resolve run before asserting either way.
+- **Service enablement is preset-driven, and the presets are in the rootfs.** On F44 `fedora-release-identity-workstation` ships `81-desktop.preset` (`disable sshd.socket`, `disable sshd.service`, cups socket activation) and `fedora-release-common` ships `85-display-manager.preset` (`enable gdm.service`) and `90-default.preset` (`enable NetworkManager.service`, and `enable sshd.service`, which 81 overrides by sorting first). Both land in our transaction, so the only `systemctl enable` the image needs is for units this repo ships. `preset-all` on first boot is enable-only, so it never undoes a disable.
+- **Fedora's dist-git `rawhide` branch is not the release being built.** The `redhat-systemd-presets*` packages that own the presets in rawhide do not exist on F44, where the same files ship inside `fedora-release-*`.
 
 ## Architecture notes that span files
 

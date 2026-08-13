@@ -103,11 +103,8 @@ cat > /var/lib/AccountsService/users/gdm <<'EOF'
 SystemAccount=true
 EOF
 
-systemctl enable gdm NetworkManager patch-nvm-bdaddr.service
-
-# The Workstation working group has openssh-server disabled by default, while
-# Fedora's general preset enables it, so say so explicitly.
-systemctl disable sshd.service
+# Only ours. gdm, NetworkManager and sshd are all decided by Fedora's presets.
+systemctl enable patch-nvm-bdaddr.service
 
 cat > /etc/dracut.conf.d/matebook.conf <<'MODEOF'
 hostonly="no"
