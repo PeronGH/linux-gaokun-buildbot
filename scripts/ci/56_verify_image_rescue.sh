@@ -73,6 +73,15 @@ sudo test ! -s "$MNT/etc/machine-id" || fail "machine-id is not empty"
 sudo grep -qE '^UUID=\S+\s+/\s+ext4\s+\S*x-systemd\.growfs' "$MNT/etc/fstab" \
   || fail "root fstab entry does not request growfs"
 
+# The failure this catches only shows up when someone runs dnf mid-repair: the
+# packages are listed but their provides do not resolve, and every transaction
+# dies on libc.so.6. Ask the image's own rpm, since that is the one that has to
+# agree with the database.
+sudo chroot "$MNT" rpm -q --provides glibc | grep -q '^libc\.so\.6' \
+  || fail "glibc provides are not readable from the rpm database"
+
+sudo test ! -e "$MNT/boot/efi/loader/random-seed" || fail "ESP carries a build-time random seed"
+
 # lsinitrd comes from the image's own dracut, so this runs inside the image.
 initrd_contents="$(sudo chroot "$MNT" lsinitrd "/boot/initramfs-${KREL}.img")"
 for want in nvme usb-storage uas systemd-repart; do

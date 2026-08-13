@@ -123,6 +123,14 @@ cat > /etc/kernel/install.conf <<'EOF'
 layout=bls
 EOF
 
+# The --entry-token=os-id below only governs the calls made here. Recording it
+# makes it survive: without this file, kernel-install resolves "auto" against the
+# machine id, which exists by the time the device installs a kernel of its own,
+# and a package upgrade would write a second set of entries under a name
+# loader.conf does not point at.
+. /etc/os-release
+printf '%s\n' "$ID" > /etc/kernel/entry-token
+
 install -d /etc/kernel/install.d
 ln -sf /dev/null /etc/kernel/install.d/51-dracut-rescue.install
 
@@ -198,6 +206,10 @@ console-mode keep
 editor yes
 EOF
 
+# The database was written by the builder's rpm; rebuild it with the one the
+# device will read it with, so provides resolve and dnf works on first use.
+rpm --rebuilddb
+
 # The rootfs is assembled on a host without SELinux, so rpm could not apply
 # file contexts. Label it here: an enforcing boot against an unlabeled root
 # fails outright. CONFIG_SECURITY_SELINUX_BOOTPARAM=y leaves selinux=0 on the
@@ -205,6 +217,13 @@ EOF
 sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 setfiles -e /dev -e /proc -e /sys -e /run \
   -F /etc/selinux/targeted/contexts/files/file_contexts /
+
+# Anything that identifies this build has to go, or every device flashed from
+# the image shares it. bootctl install seeded the ESP, and systemd would carry
+# the rest forward as its own credentials and entropy.
+rm -f /boot/efi/loader/random-seed \
+  /var/lib/systemd/random-seed \
+  /var/lib/systemd/credential.secret
 
 # Last step, after everything that needed a machine-id has run. An empty file
 # makes systemd generate a per-device id on first boot and makes

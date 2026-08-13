@@ -204,6 +204,12 @@ console-mode keep
 editor yes
 EOF
 
+# The database was written by the builder's rpm; rebuild it with the one the
+# device will read it with, so provides resolve and dnf works on first use. On a
+# rescue disk that matters more than anywhere else: dnf is how anything missing
+# gets fixed mid-repair.
+rpm --rebuilddb
+
 # The rootfs was assembled on a host without SELinux, so it carries no labels.
 # It is relabelled so sshd and systemd behave predictably and enforcing stays
 # one edit away, but it runs permissive: policy must never be what stops a
@@ -211,6 +217,13 @@ EOF
 sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config
 setfiles -e /dev -e /proc -e /sys -e /run \
   -F /etc/selinux/targeted/contexts/files/file_contexts /
+
+# Anything that identifies this build has to go, or every stick written from the
+# image shares it. bootctl install seeded the ESP, and systemd would carry the
+# rest forward as its own credentials and entropy.
+rm -f /boot/efi/loader/random-seed \
+  /var/lib/systemd/random-seed \
+  /var/lib/systemd/credential.secret
 
 # Last, so every stick generates its own on first boot.
 : > /etc/machine-id
