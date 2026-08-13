@@ -28,9 +28,9 @@ Three GitHub Actions workflows, all `workflow_dispatch`, all sharing the numbere
 
 Script order is the numeric prefix: `10` fetch prebuilt RPMs from a release → `20` build kernel variants → `30` bootstrap the rootfs with dnf → `50`/`55` create the image → `60`/`65` compress and write release notes. `70` builds the RPMs and is what `10` later downloads. Each script takes its inputs as required environment variables checked with `: "${VAR:?}"` at the top; the workflow YAML is the only caller that sets them.
 
-## Working on this from a dev machine
+## Verifying a change
 
-The build needs Linux, `sudo`, loop devices and `dnf --installroot`, so it cannot run on macOS and is not worth running locally at all. Verify by reading and by static analysis, then let CI build:
+The build needs Linux, `sudo`, loop devices and `dnf --installroot`, and is not worth running by hand even where it can run. Verify by reading and by static analysis, then let CI build:
 
 ```sh
 shellcheck scripts/ci/*.sh scripts/ci/lib/*.sh scripts/lib/*.sh scripts/local/*.sh
@@ -39,18 +39,7 @@ bash -n <script>
 
 `.shellcheckrc` sets `external-sources`/`source-path=SCRIPTDIR` so sourced libs resolve. There is no test suite; the real check is a CI run plus a boot on the device, which only the user can do. Privileged commands are handed to the user rather than run here.
 
-### Answering "what does Fedora do?"
-
-Keep one long-lived container and `docker exec` into it. `dnf` metadata is ~100 MB, so `docker run --rm` per question re-downloads it every time:
-
-```sh
-docker run -d --name fedora44 fedora:44 sleep infinity
-docker exec fedora44 dnf -q makecache
-docker exec fedora44 dnf -q repoquery --whatprovides /usr/lib/systemd/system-preset/81-desktop.preset
-docker exec fedora44 dnf --installroot=/rootfs --releasever=44 --use-host-config --assumeno install @core ...
-```
-
-`--assumeno` prints the resolved transaction and aborts, which answers "does package X actually land in our image?" in one command. To read a package's files, `dnf download --destdir` then `rpm2cpio | cpio -idmu` (install `cpio` first). Reach for this before reading dist-git or scraping mirror indexes: it reflects the real repos at the release being built, and dist-git `rawhide` is a different Fedora than the one this image ships.
+Claims about what Fedora ships are settled against a `fedora:<release>` image with the repos this build uses — `dnf --assumeno install <the image's package set>` names every package that actually lands, and `repoquery --whatprovides` names the owner of a file. Do that before quoting dist-git: `rawhide` is a different Fedora than the one being built.
 
 RPM specs are `packaging/rpm/*.spec.in` templates with `@PLACEHOLDER@` tokens substituted by `render_spec_template` in `70_build_package_rpms.sh`; `rpmspec`/`rpmlint` cannot parse them directly.
 
