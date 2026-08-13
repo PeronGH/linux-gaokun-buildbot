@@ -13,7 +13,7 @@ on:
         default: "v7.2-rc2"
       extra_packages:
         description: Extra packages to install (space-separated)
-        required: true
+        required: false
         default: ""
       rebuild_package_rpms:
         description: Rebuild gaokun package RPMs before image build
