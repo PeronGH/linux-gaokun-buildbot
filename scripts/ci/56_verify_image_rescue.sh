@@ -45,8 +45,10 @@ sudo grep -q '^fedora:' "$MNT/etc/passwd" || fail "no fedora user"
 sudo grep -qE '^fedora:\$' "$MNT/etc/shadow" || fail "fedora user has no password hash"
 sudo grep -qE '^wheel:.*\bfedora\b' "$MNT/etc/group" || fail "fedora user is not in wheel"
 
+# -L, not -e: the wants symlink is absolute into the image's /usr, which does
+# not resolve from the host this check runs on.
 for unit in sshd.service NetworkManager.service; do
-  sudo test -e "$MNT/etc/systemd/system/multi-user.target.wants/$unit" \
+  sudo test -L "$MNT/etc/systemd/system/multi-user.target.wants/$unit" \
     || fail "$unit is not enabled"
 done
 
