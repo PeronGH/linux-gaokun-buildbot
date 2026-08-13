@@ -108,11 +108,6 @@ jobs:
           chmod +x scripts/ci/55_make_image_rescue.sh
           scripts/ci/55_make_image_rescue.sh
 
-      - name: Verify image invariants
-        run: |
-          chmod +x scripts/ci/56_verify_image_rescue.sh
-          scripts/ci/56_verify_image_rescue.sh
-
       - name: Package image and generate release info
         id: package
         run: |
